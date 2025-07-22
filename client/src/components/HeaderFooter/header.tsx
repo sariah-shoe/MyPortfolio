@@ -25,8 +25,8 @@ export default function Header() {
                                     label='Experiences'
                                     defaultHref='/experiences'
                                     items={[
-                                        { name: "Professional", href: "/experiences" },
-                                        { name: "Personal", href: "/experiences" }
+                                        { name: "Professional", href: "/experiences?type=professional" },
+                                        { name: "Personal", href: "/experiences?type=personal" }
                                     ]}
                                 />
 

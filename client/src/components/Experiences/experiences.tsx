@@ -4,6 +4,7 @@ import ProffToggle from '../Shared/ProffToggle';
 import SearchBar from '../Shared/SearchBar';
 import Filter from '../Shared/Filter';
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 const experiences = [
     {
@@ -22,7 +23,7 @@ const experiences = [
         startDate: "09-2022",
         endDate: "11-2025",
         highlights: ["Honor roll"],
-        skills: ["C", "Python"]
+        skills: ["C", "Python", "React"]
     },
     {
         typeEx: "Personal",
@@ -31,7 +32,7 @@ const experiences = [
         startDate: "09-2023",
         endDate: "",
         highlights: [""],
-        skills: ["Love"]
+        skills: ["Love", "Teamwork"]
     },
     {
         typeEx: "Personal",
@@ -40,7 +41,7 @@ const experiences = [
         startDate: "09-2023",
         endDate: "",
         highlights: ["The orange one is Chise", "The grey and white one is Lou"],
-        skills: ["Cat care"]
+        skills: ["Cat care", "Patience"]
     }
 ]
 
@@ -61,6 +62,9 @@ for (const experience of experiences) {
 }
 
 export default function Experiences() {
+    // Search params for users going to professional or personal from dropdown
+    const [searchParams] = useSearchParams();
+
     // State for whether I am showing personal or professional experiences
     const [proff, setProff] = useState(false);
 
@@ -74,51 +78,61 @@ export default function Experiences() {
     // This effect makes sure that when I switch between professional and personal, the filters and search get reset
     useEffect(() => {
         setFilter([]);
+        setSearch("");
     }, [proff]);
 
+    // This effect makes sure that when I reach /experiences through the dropdown, it sets to professional or personal correctly
+    useEffect(() => {
+        const type = searchParams.get('type');
+        setProff(type === 'personal');
+    }, [searchParams]);
 
     return (
         <div>
             <Header />
             <section>
-                <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 lg:px-8">
+                <div className="px-4 py-8 sm:px-6 lg:px-8">
                     <div className="space-y-4 md:space-y-8">
-                        <div className="max-w-xl">
-                            <h2 className="text-2xl font-semibold text-gray-900 sm:text-3xl mb-5">
-                                {proff ? "Personal" : "Professional"} Experiences
-                            </h2>
+                        <div>
+                            <div className="flex gap-4 justify-between">
+                                <div className="flex gap-4">
+                                    <h2 className="text-2xl font-semibold text-gray-900 sm:text-3xl mb-5">
+                                        {proff ? "Personal" : "Professional"} Experiences
+                                    </h2>
 
-                            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-12 mb-6">
-                                {/* Toggle for whether I'm showing professional or personal experiences */}
-                                <div className="p-2">
-                                    <ProffToggle
-                                        value={proff}
-                                        onChange={setProff}
-                                    />
-                                </div>
-
-                                {/* Filter for skills*/}
-                                <div className="p-2">
-                                    {proff ?
-                                        <Filter
-                                            skills={personalSkills}
-                                            filter={filter}
-                                            setFilter={setFilter}
+                                    {/* Toggle for whether I'm showing professional or personal experiences */}
+                                    <div className="p-2">
+                                        <ProffToggle
+                                            value={proff}
+                                            onChange={setProff}
                                         />
-                                        :
-                                        <Filter
-                                            skills={profSkills}
-                                            filter={filter}
-                                            setFilter={setFilter}
-                                        />
-                                    }
-
+                                    </div>
                                 </div>
 
                                 {/* Search bar for experiences */}
-                                <div className="p-2">
-                                    <SearchBar />
+                                <div className="p-2 flex-grow max-w-md">
+                                    <SearchBar
+                                        search={search}
+                                        setSearch={setSearch}
+                                    />
                                 </div>
+                            </div>
+
+                            {/* Filter for skills*/}
+                            <div>
+                                {proff ?
+                                    <Filter
+                                        skills={personalSkills}
+                                        filter={filter}
+                                        setFilter={setFilter}
+                                    />
+                                    :
+                                    <Filter
+                                        skills={profSkills}
+                                        filter={filter}
+                                        setFilter={setFilter}
+                                    />
+                                }
                             </div>
                         </div>
                         {/* Grid of cards */}
@@ -138,8 +152,21 @@ export default function Experiences() {
                                         // Otherwise show if the experience has at least one filtered skill
                                         experience.skills.some((skill) => filter.includes(skill));
 
-                                    // Return if both matchesType and matchesSkills are true
-                                    return matchesType && matchesSkills;
+                                    // Filter by search
+                                    const matchesSearch =
+                                        // If there is nothing in the search bar, show everything
+                                        search.trim() === "" ||
+                                        // Otherwise, check if there is a match in any of the experience fields
+                                        experience.typeEx.toLowerCase().includes(search.toLowerCase()) ||
+                                        experience.position.toLowerCase().includes(search.toLowerCase()) ||
+                                        experience.company.toLowerCase().includes(search.toLowerCase()) ||
+                                        experience.startDate.toLowerCase().includes(search.toLowerCase()) ||
+                                        experience.endDate.toLowerCase().includes(search.toLowerCase()) ||
+                                        experience.highlights.some(h => h.toLowerCase().includes(search.toLowerCase())) ||
+                                        experience.skills.some(s => s.toLowerCase().includes(search.toLowerCase()))
+
+                                    // Return if both matchesType matchesSkills and matchesSearch are true
+                                    return matchesType && matchesSkills && matchesSearch;
 
                                 })
                                 .map(experience =>
@@ -177,7 +204,7 @@ export default function Experiences() {
                                             <h2>{experience.company}</h2>
                                             <h2>
                                                 {experience.startDate}
-                                                {experience.endDate !== "" ? ` to ${experience.endDate}` : " to present"}
+                                                {proff ? "" : experience.endDate !== "" ? ` to ${experience.endDate}` : " to present"}
                                             </h2>
                                         </div>
 
