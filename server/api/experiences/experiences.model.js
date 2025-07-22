@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 let Schema = mongoose.Schema;
 
 let experienceSchema = Schema({
+    typeEx: {type: String},
     position: {type: String},
     company: {type: String},
     startDate: {type: Date},

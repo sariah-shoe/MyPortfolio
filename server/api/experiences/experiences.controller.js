@@ -53,6 +53,7 @@ export function update(req, res) {
                 existingExperience.endDate = req.body.endDate;
                 existingExperience.highlights = req.body.highlights;
                 existingExperience.skills = req.body.skills;
+                existingExperience.typeEx = req.body.typeEx;
 
                 return Promise.all([
                     existingExperience.increment().save()
