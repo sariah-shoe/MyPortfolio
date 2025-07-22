@@ -4,7 +4,7 @@ import ProffToggle from '../Shared/ProffToggle';
 import SearchBar from '../Shared/SearchBar';
 import Filter from '../Shared/Filter';
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 
 const experiences = [
     {
@@ -228,13 +228,13 @@ export default function Experiences() {
                                         </div>
 
 
-                                        <a href="#" className="group mt-4 inline-flex items-center gap-1 text-sm font-medium text-blue-600">
+                                        <Link to={"/experiences/123"} className="group mt-4 inline-flex items-center gap-1 text-sm font-medium text-blue-600">
                                             Find out more
 
                                             <span aria-hidden="true" className="block transition-all group-hover:ms-0.5 rtl:rotate-180">
                                                 &rarr;
                                             </span>
-                                        </a>
+                                        </Link>
                                     </article>)}
                         </div>
                     </div>
