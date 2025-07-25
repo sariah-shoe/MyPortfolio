@@ -1,7 +1,5 @@
 import Header from '../HeaderFooter/header';
 import Footer from '../HeaderFooter/footer';
-import Carousel from '../Shared/CustomCarousel';
-import { useState } from 'react';
 import CustomCarousel from '../Shared/CustomCarousel';
 
 
@@ -30,29 +28,44 @@ export default function ExperiencePage() {
             {/* This section holds the basic information, a carousel if there are images, and a blurb about what I did there */}
             <section>
                 <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:items-center md:gap-8">
-                        <div className="md:col-span-1">
-                            <div className="max-w-lg md:max-w-none">
-                                <h2 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
-                                    {experience.position} at {experience.company}
-                                </h2>
+                    {experience.images.length == 0 ?
+                        <div className="max-w-lg md:max-w-none">
+                            <h2 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
+                                {experience.position} at {experience.company}
+                            </h2>
 
-                                <h3 className="mt-1 text-base text-gray-700 sm:text-lg">{experience.startDate} {experience.typeEx === "Personal" ? "" : experience.endDate !== "" ? ` to ${experience.endDate}` : " to present"}</h3>
+                            <h3 className="mt-1 text-base text-gray-700 sm:text-lg">{experience.startDate} {experience.typeEx === "Personal" ? "" : experience.endDate !== "" ? ` to ${experience.endDate}` : " to present"}</h3>
 
-                                <p className="mt-4 text-sm text-gray-600 sm:text-base">
-                                    {experience.extra}
-                                </p>
+                            <p className="mt-4 text-sm text-gray-600 sm:text-base">
+                                {experience.extra}
+                            </p>
+                        </div>
+                        :
+
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:items-center md:gap-8">
+                            <div className="md:col-span-1">
+                                <div className="max-w-lg md:max-w-none">
+                                    <h2 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
+                                        {experience.position} at {experience.company}
+                                    </h2>
+
+                                    <h3 className="mt-1 text-base text-gray-700 sm:text-lg">{experience.startDate} {experience.typeEx === "Personal" ? "" : experience.endDate !== "" ? ` to ${experience.endDate}` : " to present"}</h3>
+
+                                    <p className="mt-4 text-sm text-gray-600 sm:text-base">
+                                        {experience.extra}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="md:col-span-3">
-                            {experience.images.length != 0 &&                             
-                            <CustomCarousel
-                                images={experience.images}
-                            />
-                            }
-                        </div>
-                    </div>
+                            <div className="md:col-span-3">
+                                {experience.images.length != 0 &&
+                                    <CustomCarousel
+                                        images={experience.images}
+                                    />
+                                }
+                            </div>
+                        </div>}
+
                 </div>
             </section>
             {/* This section holds two cards that show my highlights and skills */}

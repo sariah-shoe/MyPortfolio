@@ -30,15 +30,9 @@ export default function Header() {
                                     ]}
                                 />
 
-                                {/* As does the projects nav link */}
-                                <NavDropdown
-                                    label='Projects'
-                                    defaultHref='/projects'
-                                    items={[
-                                        { name: "Professional", href: "/projects" },
-                                        { name: "Personal", href: "/projects" }
-                                    ]}
-                                />
+                                <li>
+                                    <Link className="text-gray-500 transition hover:text-gray-500/75" to={'/projects'}> Projects </Link>
+                                </li>
 
                                 <li>
                                     <Link className="text-gray-500 transition hover:text-gray-500/75" to={'/resume'}> Resume </Link>

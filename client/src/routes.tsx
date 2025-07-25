@@ -6,6 +6,10 @@ import ExperiencePage from "./components/Experiences/experiencePage.tsx";
 import Projects from "./components/Projects/projects.tsx";
 import ProjectPage from "./components/Projects/projectPage.tsx";
 import Resume from "./components/Resume/resume.tsx";
+import Admin from "./components/Admin/Admin.tsx";
+import AboutChange from "./components/Admin/AboutChange.tsx";
+import ExperienceChange from "./components/Admin/ExperienceChange.tsx";
+import ProjectChange from "./components/Admin/ProjectChange.tsx";
 
 const router = createBrowserRouter([
     {
@@ -35,6 +39,22 @@ const router = createBrowserRouter([
     {
         path: "/resume",
         element: <Resume />
+    },
+    {
+        path: "/admin",
+        element: <Admin />
+    },
+    {
+        path: "/admin/about",
+        element: <AboutChange />
+    },
+    {
+        path: "/admin/experiences",
+        element: <ExperienceChange />
+    },
+    {
+        path: "/admin/projects",
+        element: <ProjectChange />
     }
 ]);
 
