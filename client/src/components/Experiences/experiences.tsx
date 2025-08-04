@@ -5,73 +5,25 @@ import SearchBar from '../Shared/SearchBar';
 import Filter from '../Shared/Filter';
 import type { ExperienceObject } from '../Shared/types';
 import { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-
-const experiences:ExperienceObject[] = [
-    {
-        typeEx: "Professional",
-        position: "Intern",
-        company: "Denver Water",
-        startDate: "06-2025",
-        endDate: "",
-        highlights: ["Decomissioned laptops", "Learned to assist customers"],
-        skills: ["IT", "React", "Leadership"],
-        images: [],
-        extra: "This was a great experience!"
-    },
-    {
-        typeEx: "Education",
-        position: "Major in Computer Science and German",
-        company: "University of Denver",
-        startDate: "09-2022",
-        endDate: "11-2025",
-        highlights: ["Honor roll"],
-        skills: ["C", "Python", "React"],
-        images: [],
-        extra: "Learned so much!"
-    },
-    {
-        typeEx: "Personal",
-        position: "Married my husband",
-        company: "",
-        startDate: "09-2023",
-        endDate: "",
-        highlights: [""],
-        skills: ["Love", "Teamwork"],
-        images: [],
-        extra: "Love of my life!"
-    },
-    {
-        typeEx: "Personal",
-        position: "Got my kitties",
-        company: "",
-        startDate: "09-2023",
-        endDate: "",
-        highlights: ["The orange one is Chise", "The grey and white one is Lou"],
-        skills: ["Cat care", "Patience"],
-        images: [],
-        extra: "Love them so much!"
-    }
-]
-
-
-
-// This creates my array of skills for filters by looping through my experiences and grabbing unique skills
-// I split this into professional and personal so that I can filter accordingly
-let profSkills: string[] = []
-let personalSkills: string[] = []
-
-for (const experience of experiences) {
-    for (const skill of experience.skills) {
-        if (!profSkills.includes(skill) && (experience.typeEx === "Professional" || experience.typeEx == "Education")) {
-            profSkills.push(skill);
-        } else if (!personalSkills.includes(skill) && experience.typeEx === "Personal") {
-            personalSkills.push(skill);
-        }
-    }
-}
+import { useSearchParams, Link, useLoaderData } from 'react-router-dom';
 
 export default function Experiences() {
+    const { allExperiences } = useLoaderData() as { allExperiences: ExperienceObject[] }
+    // This creates my array of skills for filters by looping through my experiences and grabbing unique skills
+    // I split this into professional and personal so that I can filter accordingly
+    let profSkills: string[] = []
+    let personalSkills: string[] = []
+
+    for (const experience of allExperiences) {
+        for (const skill of experience.skills) {
+            if (!profSkills.includes(skill) && (experience.typeEx === "Professional" || experience.typeEx == "Education")) {
+                profSkills.push(skill);
+            } else if (!personalSkills.includes(skill) && experience.typeEx === "Personal") {
+                personalSkills.push(skill);
+            }
+        }
+    }
+
     // Search params for users going to professional or personal from dropdown
     const [searchParams] = useSearchParams();
 
@@ -148,7 +100,7 @@ export default function Experiences() {
                         {/* Grid of cards */}
                         <div className="grid grid-cols-1 gap-4 lg:grid-cols-4 lg:gap-8">
                             {/* Filter my experiences according and then map them to a card */}
-                            {experiences
+                            {allExperiences
                                 .filter((experience) => {
                                     // Filter by experience type based on toggle
                                     const matchesType = proff
@@ -238,7 +190,7 @@ export default function Experiences() {
                                         </div>
 
 
-                                        <Link to={"/experiences/123"} className="group mt-4 inline-flex items-center gap-1 text-sm font-medium text-blue-600">
+                                        <Link to={`/experiences/${experience._id}`} className="group mt-4 inline-flex items-center gap-1 text-sm font-medium text-blue-600">
                                             Find out more
 
                                             <span aria-hidden="true" className="block transition-all group-hover:ms-0.5 rtl:rotate-180">

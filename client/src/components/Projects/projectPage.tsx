@@ -2,21 +2,11 @@ import Header from '../HeaderFooter/header';
 import Footer from '../HeaderFooter/footer';
 import CustomCarousel from '../Shared/CustomCarousel';
 import type { ProjectObject } from '../Shared/types';
-
-const project:ProjectObject =
-{
-    name: "Wordle Clone",
-    startDate: "01-2023",
-    endDate: "01-2023",
-    highlights: ["Learned how to make a GUI using Python", "Created logic for thing"],
-    skills: ["Python", "Tkinter"],
-    images: [],
-    extra: "I created this for one of my classes, Intro to Programming 2",
-    gitLink: "https://github.com/sariah-shoe/Worlde-Clone",
-    replitLink: "https://replit.com/@sariahshoe/Worlde-Clone?embed=true"
-}
+import { useLoaderData } from 'react-router-dom';
 
 export default function ProjectPage() {
+    const { project } = useLoaderData() as { project: ProjectObject }
+    console.log(project);
     return (
         <div>
             <Header />

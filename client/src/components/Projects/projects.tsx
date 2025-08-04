@@ -4,48 +4,24 @@ import Filter from '../Shared/Filter';
 import SearchBar from '../Shared/SearchBar';
 import type { ProjectObject } from '../Shared/types';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-
-const projects:ProjectObject[] = [
-    {
-        name: "Portfolio",
-        startDate: "07-2025",
-        endDate: "",
-        images: [],
-        gitLink: "",
-        replitLink: "",
-        highlights: ["Made portfolio using MERN stack", "Learned about Tailwind CSS"],
-        skills: ["Node.js", "React", "Express.js", "MongoDB", "Tailwind", "Generative AI"],
-        extra: ""
-    },
-    {
-        name: "Hackathon 2025",
-        startDate: "2025-04-25",
-        endDate: "2025-04-26",
-        images: [],
-        gitLink: "",
-        replitLink: "",
-        highlights: ["Coded a project in 24 hours", "Collaborated with strangers"],
-        skills: ["Flutter", "Django", "Teamwork"],
-        extra: ""
-    }
-]
-
-// This creates my array of skills for filters by looping through my projects and grabbing unique skills
-let skills: string[] = []
-
-for (const project of projects) {
-    for (const skill of project.skills) {
-        if (!skills.includes(skill)) {
-            skills.push(skill);
-        }
-    }
-}
+import { Link, useLoaderData } from 'react-router-dom';
 
 export default function Projects() {
+    const { allProjects } = useLoaderData() as { allProjects: ProjectObject[] }
+    
+    // This creates my array of skills for filters by looping through my projects and grabbing unique skills
+    let skills: string[] = []
+
+    for (const project of allProjects) {
+        for (const skill of project.skills) {
+            if (!skills.includes(skill)) {
+                skills.push(skill);
+            }
+        }
+    }
+
     // State for filter
     const [filter, setFilter] = useState<string[]>([]);
-
 
     // State for search
     const [search, setSearch] = useState("");
@@ -86,7 +62,7 @@ export default function Projects() {
                         {/* Grid of cards */}
                         <div className="grid grid-cols-1 gap-4 lg:grid-cols-4 lg:gap-8">
                             {/* Filter my experiences according and then map them to a card */}
-                            {projects
+                            {allProjects
                                 .filter((project) => {
                                     // Filter by selected skills
                                     const matchesSkills =
@@ -156,7 +132,7 @@ export default function Projects() {
                                         </div>
 
 
-                                        <Link to={"/projects/123"} className="group mt-4 inline-flex items-center gap-1 text-sm font-medium text-blue-600">
+                                        <Link to={`/projects/${project._id}`} className="group mt-4 inline-flex items-center gap-1 text-sm font-medium text-blue-600">
                                             Find out more
 
                                             <span aria-hidden="true" className="block transition-all group-hover:ms-0.5 rtl:rotate-180">

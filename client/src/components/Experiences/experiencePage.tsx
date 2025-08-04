@@ -1,43 +1,11 @@
 import Header from '../HeaderFooter/header';
 import Footer from '../HeaderFooter/footer';
 import CustomCarousel from '../Shared/CustomCarousel';
-import type { ExperienceObject, FileObject } from '../Shared/types';
-
-
-
-const experience: ExperienceObject =
-{
-    typeEx: "Professional",
-    position: "Intern",
-    company: "Denver Water",
-    startDate: "06-2025",
-    endDate: "",
-    highlights: ["Decomissioned laptops", "Learned to assist customers"],
-    skills: ["IT", "React", "Leadership"],
-    images: [
-        {
-            type: 'image',
-            url: "https://res.cloudinary.com/dzgha4azw/image/upload/v1754077186/cld-sample-5.jpg",
-            public_id: "cld-sample-5",
-            uploadedAt: '08-01-2025',
-        },
-        {
-            type: 'image',
-            url: "https://res.cloudinary.com/dzgha4azw/image/upload/v1754077186/cld-sample-4.jpg",
-            public_id: "cld-sample-4",
-            uploadedAt: '08-01-2025',
-        },
-        {
-            type: 'image',
-            url: "https://res.cloudinary.com/dzgha4azw/image/upload/v1754077186/cld-sample-3.jpg",
-            public_id: "cld-sample-3",
-            uploadedAt: '08-01-2025',
-        }
-    ],
-    extra: "Denver Water was where I built this website. My manager encouraged my professional and educational goals."
-}
+import type { ExperienceObject } from '../Shared/types';
+import { useLoaderData } from 'react-router-dom';
 
 export default function ExperiencePage() {
+    const { experience } = useLoaderData() as { experience: ExperienceObject}
     return (
         <div>
             <Header />

@@ -9,7 +9,7 @@ export async function index(req, res) {
         if (!aboutInfo) {
             return res.status(404).json({ message: "About info not found" });
         }
-        res.json({ aboutInfo })
+        res.json(aboutInfo);
         // Catch both user errors and server errors and return the correct response
     } catch (err) {
         if (err.name === "ValidationError" || err.name === "CastError") {

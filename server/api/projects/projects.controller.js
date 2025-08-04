@@ -21,7 +21,7 @@ export async function show(req, res) {
             return res.status(404).json({ message: "Not found" });
         }
 
-        res.status(200).json({ message: "Not Found" })
+        res.status(200).json(project);
     } catch (err) {
         if (err.name === 'ValidationError' || err.name === 'CastError') {
             return res.status(400).json({ error: err.message });

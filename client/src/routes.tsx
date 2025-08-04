@@ -10,11 +10,15 @@ import Admin from "./components/Admin/Admin.tsx";
 import AboutChange from "./components/Admin/AboutChange.tsx";
 import ProjectCards from "./components/Admin/ProjectCards.tsx";
 import ExperienceCards from "./components/Admin/ExperienceCards.tsx";
+import * as aboutMeActions from "./loaders/aboutMe-loader.ts";
+import * as experienceActions from "./loaders/experiences-loader.ts";
+import * as projectActions from "./loaders/project-loader.ts";
 
 const router = createBrowserRouter([
     {
         path: "/",
-        element: <Root />
+        element: <Root />,
+        loader: aboutMeActions.load_all
     },
     {
         path: "/contact",
@@ -22,23 +26,28 @@ const router = createBrowserRouter([
     },
     {
         path: "/experiences",
-        element: <Experiences />
+        element: <Experiences />,
+        loader: experienceActions.load_all
     },
     {
         path: "/experiences/:id",
-        element: <ExperiencePage />
+        element: <ExperiencePage />,
+        loader: experienceActions.load_one
     },
     {
         path: "/projects",
-        element: <Projects />
+        element: <Projects />,
+        loader: projectActions.load_all
     },
     {
         path: "/projects/:id",
-        element: <ProjectPage />
+        element: <ProjectPage />,
+        loader: projectActions.load_one
     },
     {
         path: "/resume",
-        element: <Resume />
+        element: <Resume />,
+        loader: aboutMeActions.load_all
     },
     {
         path: "/admin",

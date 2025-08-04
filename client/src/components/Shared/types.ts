@@ -23,6 +23,7 @@ export interface ExperienceObject {
   skills: string[];
   images: FileObject[];
   extra: string;
+  _id: string;
 }
 
 export interface ProjectObject {
@@ -35,4 +36,5 @@ export interface ProjectObject {
   highlights: string[];
   skills: string[];
   extra: string;
+  _id: string;
 }
