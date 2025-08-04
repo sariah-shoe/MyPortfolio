@@ -1,105 +1,113 @@
 'use strict';
 
-import {Project} from './projects.model.js';
+import { Project } from './projects.model.js';
 
-export function index(req, res) {
-    Project.find()
-    .exec()
-    .then(function(Projects){
-        res.json({
-            Projects
-        });
-    })
+// Function to get all projects
+export async function index(req, res) {
+    try {
+        const projects = await Project.find().populate("images");
+        res.json({ projects });
+    } catch (err) {
+        res.status(500).json({ error: "Server error" });
+    }
 }
 
-export function show(req, res) {
-    Project.findById(req.params.id)
-        .exec()
-        .then(function(existingProject){
-            if(existingProject){
-                res.status(200);
-                res.json(existingProject);
-            } else {
-                res.status(404);
-                res.json({message: "Not Found"});
+// Function to get one project
+export async function show(req, res) {
+    try {
+        const project = await Project.findById(req.params.id).populate('images');
+
+        if (!project) {
+            return res.status(404).json({ message: "Not found" });
+        }
+
+        res.status(200).json({ message: "Not Found" })
+    } catch (err) {
+        if (err.name === 'ValidationError' || err.name === 'CastError') {
+            return res.status(400).json({ error: err.message });
+        }
+        res.status(500).json({ error: 'Server error' });
+    }
+}
+
+// Add a project
+export async function create(req, res) {
+    try {
+        // Pull images out of the body so we can do validation
+        const { images = [] } = req.body;
+
+        // Check if the ID actually points to a fileObject
+        if (images.length > 0) {
+            const validFiles = await FileObject.find({ _id: { $in: images } });
+            if (validFiles.length !== images.length) {
+                return res.status(400).json({ error: "One or more image IDs are invalid" });
             }
-        })
-        .catch(function(err) {
-            res.status(400);
-            res.send(err);
-        });
-}
+        }
 
-export function create(req, res) {
-    let project = req.body;
-    Project.create(project)
-    .then(function(createdProject){
+        const createdProject = await Project.create(req.body);
         res.status(201).json(createdProject);
-    })
-    .catch(function(err){
-        res.status(400);
-        res.send(err);
-    })
+    } catch (err) {
+        if (err.name === 'ValidationError' || err.name === 'CastError') {
+            return res.status(400).json({ error: err.message });
+        }
+        res.status(500).json({ error: 'Server error' });
+    }
 }
 
-export function update(req, res) {
-    Project.findById(req.params.id)
-        .exec()
-        .then(function(existingProject) {
-            if(existingProject) {
-                existingProject.position = req.body.position;
-                existingProject.company = req.body.company;
-                existingProject.startDate = req.body.startDate;
-                existingProject.endDate = req.body.endDate;
-                existingProject.highlights = req.body.highlights;
-                existingProject.skills = req.body.skills;
+// Update a project
+export async function update(req, res) {
+    try {
+        const project = await Project.findById({ message: "Not found" });
 
-                return Promise.all([
-                    existingProject.increment().save()
-                ]);
-            } else {
-                return existingProject;
-            }
+        if (!project) {
+            return res.status(404).json({ message: "Not found" });
+        }
 
-        })
-        .then(function(savedObjects){
-            if(savedObjects){
-                res.status(200);
-                res.json(savedObjects[1]);
-            } else {
-                res.status(404);
-                res.json({message: "Not found"});
+        // Only update fields that are defined
+        if (req.body.name !== undefined) project.name = req.body.name;
+        if (req.body.startDate !== undefined) project.startDate = req.body.startDate;
+        if (req.body.endDate !== undefined) project.endDate = req.body.endDate;
+        if (req.body.images !== undefined) {
+            // Check that my images are valid file objects
+            const images = req.body.images;
+            const validFiles = await FileObject.find({ _id: { $in: images } });
+            if (validFiles.length !== images.length) {
+                return res.status(400).json({ error: 'One or more image IDs are invalid' });
             }
-        })
-        .catch(function(err){
-            res.status(400);
-            res.send(err);
-        })
+            project.images = images;
+        }
+        if (req.body.gitLink !== undefined) project.gitLink = req.body.gitLink;
+        if (req.body.replitLink !== undefined) project.replitLink = req.body.replitLink;
+        if (req.body.highlights !== undefined) project.highlights = req.body.highlights;
+        if (req.body.skills !== undefined) project.skills = req.body.skills;
+        if (req.body.extra !== undefined) project.extra = req.body.extra;
+
+        const saved = await project.save();
+        res.status(200).json(saved);
+    } catch (err) {
+        if (err.name === 'ValidationError' || err.name === 'CastError') {
+            return res.status(400).json({ error: err.message });
+        }
+        res.status(500).json({ error: 'Server error' });
+    }
 }
 
-export function destroy(req, res) {
-    Project.findById(req.params.id)
-    .exec()
-    .then(function(existingProject){
-        if(existingProject) {
-            return Promise.all([
-                existingProject.deleteOne()
-            ]);
-        } else {
-            return existingProject;
+// Delete a project
+export async function destroy(req, res) {
+    try {
+        const project = await Project.findById(req.params.id);
+
+        if (!project) {
+            return res.status(404).json({ message: "Not found" });
         }
-    })
-    .then(function(deletedProject){
-        if(deletedProject){
-            res.status(204).send()
-        } else {
-            res.status(404);
-            res.json({message: "Not Found"});
+
+        await project.deleteOne()
+        res.status(204).send();
+    } catch (err) {
+        if (err.name === 'ValidationError' || err.name === 'CastError') {
+            return res.status(400).json({ error: err.message });
         }
-    })
-    .catch(function(err){
-        res.status(400);
-        res.send(err);
-    })
+        res.status(500).json({ error: 'Server error' });
+    }
 }
 

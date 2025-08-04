@@ -1,10 +1,9 @@
 import Header from '../HeaderFooter/header';
 import Footer from '../HeaderFooter/footer';
 import CustomCarousel from '../Shared/CustomCarousel';
+import type { ProjectObject } from '../Shared/types';
 
-
-
-const project =
+const project:ProjectObject =
 {
     name: "Wordle Clone",
     startDate: "01-2023",
@@ -13,7 +12,8 @@ const project =
     skills: ["Python", "Tkinter"],
     images: [],
     extra: "I created this for one of my classes, Intro to Programming 2",
-    link: "https://github.com/sariah-shoe/Worlde-Clone"
+    gitLink: "https://github.com/sariah-shoe/Worlde-Clone",
+    replitLink: "https://replit.com/@sariahshoe/Worlde-Clone?embed=true"
 }
 
 export default function ProjectPage() {
@@ -38,13 +38,13 @@ export default function ProjectPage() {
                                     <p className="mt-4 text-sm text-gray-600 sm:text-base">
                                         {project.extra}
                                     </p>
-                                    <a href={project.link} className="mt-4 text-sm text-gray-600 sm:text-base">Github Link</a>
+                                    <a href={project.gitLink} className="mt-4 text-sm text-gray-600 sm:text-base">Github Link</a>
                                 </div>
                             </div>
 
                             <div className="md:col-span-3">
                                 <iframe
-                                    src="https://replit.com/@sariahshoe/Worlde-Clone?embed=true"
+                                    src={project.replitLink}
                                     className="w-full h-[400px] rounded-lg border"
                                 />
                             </div>
@@ -65,14 +65,14 @@ export default function ProjectPage() {
                                         {project.extra}
                                     </p>
 
-                                    <a href={project.link}>Github Link</a>
+                                    <a href={project.gitLink}>Github Link</a>
                                 </div>
                             </div>
 
                             <div className="md:col-span-3">
                                 {project.images.length != 0 &&
                                     <CustomCarousel
-                                        images={project.images}
+                                        images={project.images.map((image) => image.url)}
                                     />
                                 }
                             </div>

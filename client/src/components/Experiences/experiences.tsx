@@ -3,10 +3,11 @@ import Footer from '../HeaderFooter/footer';
 import ProffToggle from '../Shared/ProffToggle';
 import SearchBar from '../Shared/SearchBar';
 import Filter from '../Shared/Filter';
+import type { ExperienceObject } from '../Shared/types';
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 
-const experiences = [
+const experiences:ExperienceObject[] = [
     {
         typeEx: "Professional",
         position: "Intern",
@@ -14,7 +15,9 @@ const experiences = [
         startDate: "06-2025",
         endDate: "",
         highlights: ["Decomissioned laptops", "Learned to assist customers"],
-        skills: ["IT", "React", "Leadership"]
+        skills: ["IT", "React", "Leadership"],
+        images: [],
+        extra: "This was a great experience!"
     },
     {
         typeEx: "Education",
@@ -23,7 +26,9 @@ const experiences = [
         startDate: "09-2022",
         endDate: "11-2025",
         highlights: ["Honor roll"],
-        skills: ["C", "Python", "React"]
+        skills: ["C", "Python", "React"],
+        images: [],
+        extra: "Learned so much!"
     },
     {
         typeEx: "Personal",
@@ -32,7 +37,9 @@ const experiences = [
         startDate: "09-2023",
         endDate: "",
         highlights: [""],
-        skills: ["Love", "Teamwork"]
+        skills: ["Love", "Teamwork"],
+        images: [],
+        extra: "Love of my life!"
     },
     {
         typeEx: "Personal",
@@ -41,9 +48,12 @@ const experiences = [
         startDate: "09-2023",
         endDate: "",
         highlights: ["The orange one is Chise", "The grey and white one is Lou"],
-        skills: ["Cat care", "Patience"]
+        skills: ["Cat care", "Patience"],
+        images: [],
+        extra: "Love them so much!"
     }
 ]
+
 
 
 // This creates my array of skills for filters by looping through my experiences and grabbing unique skills

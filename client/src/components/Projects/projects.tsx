@@ -2,23 +2,32 @@ import Header from '../HeaderFooter/header';
 import Footer from '../HeaderFooter/footer';
 import Filter from '../Shared/Filter';
 import SearchBar from '../Shared/SearchBar';
+import type { ProjectObject } from '../Shared/types';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-const projects = [
+const projects:ProjectObject[] = [
     {
         name: "Portfolio",
         startDate: "07-2025",
         endDate: "",
+        images: [],
+        gitLink: "",
+        replitLink: "",
         highlights: ["Made portfolio using MERN stack", "Learned about Tailwind CSS"],
         skills: ["Node.js", "React", "Express.js", "MongoDB", "Tailwind", "Generative AI"],
+        extra: ""
     },
     {
         name: "Hackathon 2025",
         startDate: "2025-04-25",
         endDate: "2025-04-26",
+        images: [],
+        gitLink: "",
+        replitLink: "",
         highlights: ["Coded a project in 24 hours", "Collaborated with strangers"],
         skills: ["Flutter", "Django", "Teamwork"],
+        extra: ""
     }
 ]
 

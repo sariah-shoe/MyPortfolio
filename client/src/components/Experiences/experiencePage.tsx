@@ -1,10 +1,11 @@
 import Header from '../HeaderFooter/header';
 import Footer from '../HeaderFooter/footer';
 import CustomCarousel from '../Shared/CustomCarousel';
+import type { ExperienceObject, FileObject } from '../Shared/types';
 
 
 
-const experience =
+const experience: ExperienceObject =
 {
     typeEx: "Professional",
     position: "Intern",
@@ -14,9 +15,24 @@ const experience =
     highlights: ["Decomissioned laptops", "Learned to assist customers"],
     skills: ["IT", "React", "Leadership"],
     images: [
-        'https://www.limestone.edu/sites/default/files/styles/news_preview_image/public/2022-03/computer-programmer.jpg',
-        'https://img.waterworld.com/files/base/ebm/ww/image/2024/03/65e724a21f04ab001e1d8534-dreamstime_xl_32360015.png',
-        'https://dfjx2uxqg3cgi.cloudfront.net/img/photo/136096/136096_00_2x.jpg'
+        {
+            type: 'image',
+            url: "https://res.cloudinary.com/dzgha4azw/image/upload/v1754077186/cld-sample-5.jpg",
+            public_id: "cld-sample-5",
+            uploadedAt: '08-01-2025',
+        },
+        {
+            type: 'image',
+            url: "https://res.cloudinary.com/dzgha4azw/image/upload/v1754077186/cld-sample-4.jpg",
+            public_id: "cld-sample-4",
+            uploadedAt: '08-01-2025',
+        },
+        {
+            type: 'image',
+            url: "https://res.cloudinary.com/dzgha4azw/image/upload/v1754077186/cld-sample-3.jpg",
+            public_id: "cld-sample-3",
+            uploadedAt: '08-01-2025',
+        }
     ],
     extra: "Denver Water was where I built this website. My manager encouraged my professional and educational goals."
 }
@@ -60,7 +76,7 @@ export default function ExperiencePage() {
                             <div className="md:col-span-3">
                                 {experience.images.length != 0 &&
                                     <CustomCarousel
-                                        images={experience.images}
+                                        images={experience.images.map((image) => image.url)}
                                     />
                                 }
                             </div>

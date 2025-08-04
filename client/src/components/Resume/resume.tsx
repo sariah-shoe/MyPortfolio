@@ -1,6 +1,22 @@
 import Header from '../HeaderFooter/header';
 import Footer from '../HeaderFooter/footer';
-import pdfFile from '../../assets/MyResume.pdf'
+import type { AboutObject } from '../Shared/types';
+
+const ExampleAbout: AboutObject = {
+    headshot: {
+        type: 'image',
+        url: "https://res.cloudinary.com/dzgha4azw/image/upload/v1754077186/main-sample.png",
+        public_id: "main-sample",
+        uploadedAt: "08-01-2025",
+    },
+    blurb: "Hello! I am Sariah Shoemaker and welcome to my portfolio. This was built using a MERN stack and highlights my personal and professional acheivements. Take a look around and feel free to reach out!",
+    resume: {
+        type: 'pdf',
+        url: "https://res.cloudinary.com/dzgha4azw/raw/upload/v1754145999/resume.pdf",
+        public_id: "resume.pdf",
+        uploadedAt: "08-02-2025"
+    }
+}
 
 export default function Resume() {
     return (
@@ -16,7 +32,7 @@ export default function Resume() {
                         </div>
 
                         <iframe
-                            src={pdfFile}
+                            src={ExampleAbout.resume.url}
                             width="100%"
                             height="600px"
                             loading="lazy"
