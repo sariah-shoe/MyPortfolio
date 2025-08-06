@@ -1,40 +1,36 @@
+import { useState } from "react";
+
 interface ListProps {
-  itemList: string[];
-  setItemList: (newValue: string[]) => void;
+  name: string;
+  initialItems: string[];
 }
 
-export default function ChangeDirection({ itemList, setItemList }: ListProps) {
+export default function List({ name, initialItems }: ListProps) {
+  const [items, setItems] = useState(initialItems.length > 0 ? initialItems : [""]);
+
   const handleItemChange = (index: number, value: string) => {
-    const updated = [...itemList];
+    const updated = [...items];
     updated[index] = value;
-    setItemList(updated);
+    setItems(updated);
   };
 
-  const addItem = () => {
-    setItemList([...itemList, '']);
-  };
+  const addItem = () => setItems([...items, ""]);
 
   const removeItem = (index: number) => {
-    setItemList(itemList.filter((_, i) => i !== index));
+    setItems(items.filter((_, i) => i !== index));
   };
 
   return (
-    <div className="space-y-4">
-      {itemList.map((step, index) => (
-        <div
-          key={index}
-          className="flex flex-col md:flex-row md:items-start gap-2 border border-gray-200 p-3 rounded"
-        >
+    <div className="space-y-4 mt-2">
+      {items.map((item, index) => (
+        <div key={index} className="flex flex-col md:flex-row md:items-start gap-2 border border-gray-200 p-3 rounded">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Step {index + 1}
-            </label>
             <textarea
-              name={`directions[${index}]`}
-              value={step}
+              name={`${name}[${index}]`}
+              defaultValue={item}
               onChange={(e) => handleItemChange(index, e.target.value)}
               className="w-full p-2 border border-gray-300 rounded resize-y min-h-[60px] text-sm"
-              placeholder="Enter step..."
+              placeholder={`Enter ${name}...`}
             />
           </div>
           <button
@@ -52,7 +48,7 @@ export default function ChangeDirection({ itemList, setItemList }: ListProps) {
         onClick={addItem}
         className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
       >
-        Add Item
+        Add {name.slice(0, 1).toUpperCase() + name.slice(1)}
       </button>
     </div>
   );

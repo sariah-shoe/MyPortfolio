@@ -10,9 +10,9 @@ import Admin from "./components/Admin/Admin.tsx";
 import AboutChange from "./components/Admin/AboutChange.tsx";
 import ProjectCards from "./components/Admin/ProjectCards.tsx";
 import ExperienceCards from "./components/Admin/ExperienceCards.tsx";
-import * as aboutMeActions from "./loaders/aboutMe-loader.ts";
-import * as experienceActions from "./loaders/experiences-loader.ts";
-import * as projectActions from "./loaders/project-loader.ts";
+import * as aboutMeActions from "./apiHandling/aboutMeActions.ts";
+import * as experienceActions from "./apiHandling/experiencesActions.ts";
+import * as projectActions from "./apiHandling/projectsActions.ts";
 
 const router = createBrowserRouter([
     {
@@ -55,15 +55,33 @@ const router = createBrowserRouter([
     },
     {
         path: "/admin/about",
-        element: <AboutChange />
+        element: <AboutChange />,
+        loader: aboutMeActions.load_all,
+        action: aboutMeActions.update
     },
     {
         path: "/admin/experiences",
-        element: <ExperienceCards />
+        element: <ExperienceCards />,
+        loader: experienceActions.load_all,
+        action: experienceActions.create,
+        children: [
+            {
+                path: ":id",
+                action: experienceActions.modify,
+            }
+        ]
     },
     {
         path: "/admin/projects",
-        element: <ProjectCards />
+        element: <ProjectCards />,
+        loader: projectActions.load_all,
+        action: projectActions.create,
+        children: [
+            {
+                path: ":id",
+                action: projectActions.modify,
+            }
+        ]
     }
 ]);
 

@@ -1,6 +1,7 @@
 'use strict';
 
 import { Project } from './projects.model.js';
+import { FileObject } from '../fileObject/fileObject.model.js';
 
 // Function to get all projects
 export async function index(req, res) {
@@ -57,7 +58,7 @@ export async function create(req, res) {
 // Update a project
 export async function update(req, res) {
     try {
-        const project = await Project.findById({ message: "Not found" });
+        const project = await Project.findById(req.params.id);
 
         if (!project) {
             return res.status(404).json({ message: "Not found" });
