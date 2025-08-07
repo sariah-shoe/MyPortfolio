@@ -1,12 +1,14 @@
 import List from "./List.tsx";
 import type { ProjectObject } from "../Shared/types.ts";
 import { Form } from "react-router-dom";
+import FileListEditor from "./FileListEditor.tsx";
 
 interface ProjectProps {
     project: ProjectObject;
+    onSubmitStart?: (position: string) => void;
 }
 
-export default function ProjectChange({ project }: ProjectProps) {
+export default function ProjectChange({ project, onSubmitStart }: ProjectProps) {
     return (
         <div className="p-6 bg-white rounded-lg shadow space-y-4">
             <Form
@@ -23,6 +25,7 @@ export default function ProjectChange({ project }: ProjectProps) {
             <Form
                 method="PUT"
                 action={`/admin/projects/${project._id}`}
+                onSubmit={() => onSubmitStart?.(project.name)} 
             >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input
@@ -30,6 +33,8 @@ export default function ProjectChange({ project }: ProjectProps) {
                         placeholder="Name"
                         defaultValue={project.name}
                         name="name"
+                        required
+                        maxLength={100}
                     />
                     <input
                         className="p-2 border border-gray-300 rounded"
@@ -37,6 +42,7 @@ export default function ProjectChange({ project }: ProjectProps) {
                         defaultValue={project.startDate}
                         name="startDate"
                         type="date"
+                        required
                     />
                     <input
                         className="p-2 border border-gray-300 rounded"
@@ -50,21 +56,22 @@ export default function ProjectChange({ project }: ProjectProps) {
                         placeholder="GitHub Link"
                         defaultValue={project.gitLink}
                         name="gitLink"
+                        maxLength={300}
                     />
                     <input
                         className="p-2 border border-gray-300 rounded"
                         placeholder="Replit Link"
                         defaultValue={project.replitLink}
                         name="replitLink"
+                        maxLength={300}
                     />
                 </div>
-                {/* <div>
+                <div>
                     <label className="font-semibold">Images:</label>
-                    <List
-                        name=""
-                        initialItems={project.images}
+                    <FileListEditor 
+                        initialFiles={project.images}
                     />
-                </div> */}
+                </div>
                 <div>
                     <label className="font-semibold">Highlights:</label>
                     <List
@@ -85,11 +92,12 @@ export default function ProjectChange({ project }: ProjectProps) {
                         className="w-full p-2 border border-gray-300 rounded"
                         defaultValue={project.extra}
                         name="extra"
+                        maxLength={2000}
                     />
                 </div>
                 <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                 >
                     Save
                 </button>

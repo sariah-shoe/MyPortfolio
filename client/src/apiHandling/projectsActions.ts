@@ -59,7 +59,6 @@ async function modify({ request, params }: ActionFunctionArgs) {
     const formData = await request.formData();
     const method = request.method.toUpperCase();
     const id = params.id;
-    console.log(params.id);
 
     if (method === "PUT") {
         const rawFields = {
@@ -100,8 +99,6 @@ async function modify({ request, params }: ActionFunctionArgs) {
 
         // Leave images empty for now or process if needed
         body.images = [];
-
-        console.log(body);
 
         const res = await fetch(`${apiUrl}api/projects/${id}`, {
             method: "PUT",

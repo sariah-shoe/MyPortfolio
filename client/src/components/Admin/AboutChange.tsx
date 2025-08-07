@@ -68,7 +68,13 @@ export default function AboutChange() {
                     </div>
                 </div>
             )}
-            <h2 className="mb-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl">About Me</h2>
+            <h2 className="mb-6 text-4xl font-extrabold text-gray-900">About Me</h2>
+            <Link
+                to={"/admin"}
+                className="inline-block mt-8 text-xl font-semibold text-blue-700 hover:underline"
+            >
+                Back to Admin
+            </Link>
             <Form
                 className="max-w-sm mx-auto"
                 action={`/admin/about`} method={'put'}
@@ -82,6 +88,7 @@ export default function AboutChange() {
                             rows={10}
                             defaultValue={aboutMeData.blurb}
                             name="blurb"
+                            maxLength={1000}
                         />
                     </label>
                 </div>
@@ -148,7 +155,12 @@ export default function AboutChange() {
                     <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center">Submit</button>
                 </div>
             </Form>
-            <Link to={"/admin"} className="mb-4 text-3xl font-extrabold leading-none tracking-tight text-gray-900 md:text-4xl">Back to Admin</Link>
+            <Link
+                to={"/admin"}
+                className="inline-block mt-8 text-xl font-semibold text-blue-700 hover:underline"
+            >
+                Back to Admin
+            </Link>
         </div>
     )
 }

@@ -102,8 +102,6 @@ async function modify({ request, params }: ActionFunctionArgs) {
         // Leave images empty for now or process if needed
         body.images = [];
 
-        console.log(body);
-
         const res = await fetch(`${apiUrl}api/experiences/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },

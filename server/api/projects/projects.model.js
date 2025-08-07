@@ -68,17 +68,17 @@ let projectSchema = Schema({
         type: [String],
         default: [],
         validator: function (arr) {
-            return Array.isArray(arr) && arr.every(item => typeof item === "string" && item.length <= 500);
+            return Array.isArray(arr) && arr.every(item => typeof item === "string" && item.length <= 500 && arr.length <= 10);
         },
-        message: "Each highlight must be a string of 500 characters or fewer" 
+        message: "There can only be 10 highlights and each must be a string of 500 characters or fewer" 
     },
     skills: { 
         type: Array,
         default: [],
         validator: function (arr) {
-            return Array.isArray(arr) && arr.every(item => typeof item === "string" && item.length <= 100);
+            return Array.isArray(arr) && arr.every(item => typeof item === "string" && item.length <= 100 && arr.length <=10);
         },
-        message: "Each skill must be a string of 100 characters or fewer"
+        message: "There can only be 10 skills and each must be a string of 100 characters or fewer"
     },
     extra: { 
         type: String,
