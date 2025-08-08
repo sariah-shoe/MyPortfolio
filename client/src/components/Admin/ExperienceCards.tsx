@@ -1,16 +1,21 @@
 // ExperienceCards.tsx
-import { Link, useLoaderData, Form, useNavigation } from "react-router-dom";
+import { Link, useLoaderData, Form, useNavigation, useNavigate } from "react-router-dom";
 import ExperienceChange from "./ExperienceChange";
 import type { ExperienceObject } from "../Shared/types";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useUnsavedChangesGuard } from "../../hooks/useUnsavedChangesGuard";
 
 export default function ExperienceCards() {
     const { allExperiences } = useLoaderData() as { allExperiences: ExperienceObject[] }
     const navigation = useNavigation();
+    const navigate = useNavigate();
     const [showToast, setShowToast] = useState(false);
     const [wasSubmitting, setWasSubmitting] = useState(false);
     const [lastEdited, setLastEdited] = useState<string | null>(null);
     const lastEditedRef = useRef<string | null>(null);
+    const [dirtyExperiences, setDirtyExperiences] = useState<Record<string, boolean>>({});
+    const savingRef = useRef(false);
+    const guardBypassRef = useRef(false); // bypass guard for our own redirect
 
     useEffect(() => {
         if (navigation.state === "submitting" && navigation.formMethod?.toLowerCase() === "put") {
@@ -24,10 +29,40 @@ export default function ExperienceCards() {
             setShowToast(true);
             setTimeout(() => setShowToast(false), 3000);
             setWasSubmitting(false);
+            savingRef.current = false;
         }
     }, [navigation.state, wasSubmitting]);
 
+    const handleDirtyChange = (id: string, isDirty: boolean) => {
+        setDirtyExperiences(prev => ({
+            ...prev,
+            [id]: isDirty,
+        }))
+    }
 
+    // Names to show in the prompt
+    const dirtyIds = useMemo(
+        () => Object.entries(dirtyExperiences).filter(([, v]) => v).map(([id]) => id),
+        [dirtyExperiences]
+    );
+    const dirtyNames = useMemo(() => {
+        return dirtyIds
+            .map(id => {
+                const ex = allExperiences.find(e => e._id === id);
+                return ex?.position || ex?.company || "Untitled Experience";
+            })
+            .filter(Boolean);
+    }, [dirtyIds, allExperiences]);
+
+    useUnsavedChangesGuard({
+        when: dirtyIds.length > 0,
+        names: dirtyNames,
+        suppress: savingRef.current || guardBypassRef.current, // ← include bypass
+        onConfirm: () => {
+            guardBypassRef.current = true;      // suppress the next nav
+            navigate("/admin", { replace: true });
+        },
+    });
     return (
         <div className="px-6 py-4">
             {showToast && (
@@ -87,13 +122,15 @@ export default function ExperienceCards() {
                 Back to Admin
             </Link>
             <div className="space-y-6 mt-4">
-                {allExperiences.map((experience, idx) => (
+                {allExperiences.map((experience) => (
                     <ExperienceChange
-                        key={idx}
+                        key={experience._id}
                         experience={experience}
                         onSubmitStart={(position) => {
                             lastEditedRef.current = position;
+                            savingRef.current = true;
                         }}
+                        onDirtyChange={handleDirtyChange}
                     />
                 ))}
 

@@ -1,32 +1,77 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface ListProps {
-  name: string;
-  initialItems: string[];
+  name: string; 
+  initialItems: string[];  
+  onDirty?: (isDirty: boolean) => void; 
 }
 
-export default function List({ name, initialItems }: ListProps) {
-  const [items, setItems] = useState(initialItems.length > 0 ? initialItems : [""]);
+export default function List({ name, initialItems, onDirty }: ListProps) {
+  // Local, stateful list
+  const [items, setItems] = useState(
+    initialItems.length > 0 ? initialItems : [""]
+  );
+
+  // Local dirty flag; only flips true on edit, resets when initialItems change
+  const [isDirty, setIsDirty] = useState(false);
+
+  const norm = (arr: string[]) =>
+    arr.map((s) => (s ?? "").trim());
+
+  // Precompute normalized baselines so comparisons are cheap & stable
+  const baseline = useMemo(() => norm(initialItems), [initialItems]);
 
   const handleItemChange = (index: number, value: string) => {
-    const updated = [...items];
-    updated[index] = value;
-    setItems(updated);
+    setItems((prev) => {
+      const updated = [...prev];
+      updated[index] = value;
+      return updated;
+    });
   };
 
-  const addItem = () => setItems([...items, ""]);
+  const addItem = () => setItems((prev) => [...prev, ""]);
+  const removeItem = (index: number) =>
+    setItems((prev) => prev.filter((_, i) => i !== index));
 
-  const removeItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index));
-  };
+  // --- DIRTY: flip to true on any divergence from baseline (user edits) ---
+  useEffect(() => {
+    if (isDirty) return; // already dirty; don't evaluate further
+
+    const current = norm(items);
+    const arraysEqual =
+      current.length === baseline.length &&
+      current.every((v, i) => v === baseline[i]);
+
+    if (!arraysEqual) {
+      setIsDirty(true);
+      onDirty?.(true); // notify parent once
+    }
+  }, [items, baseline, isDirty, onDirty]);
+
+  // --- RESET: when canonical data reloads (after save), sync & clear dirty ---
+  useEffect(() => {
+    // sync UI to latest server data
+    setItems(initialItems.length > 0 ? initialItems : [""]);
+
+    if (isDirty) {
+      setIsDirty(false);
+      onDirty?.(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialItems]); // deliberately only on initialItems change
 
   return (
     <div className="space-y-4 mt-2">
       {items.map((item, index) => (
-        <div key={index} className="flex flex-col md:flex-row md:items-start gap-2 border border-gray-200 p-3 rounded">
+        <div
+          key={index}
+          className="flex flex-col md:flex-row md:items-start gap-2 border border-gray-200 p-3 rounded"
+        >
           <div className="flex-1">
             <textarea
-              name={`${name}[${index}]`}
+              // Use the SAME name for all items so FormData.getAll works.
+              // Choose either `${name}[]` convention or just `name`.
+              name={`${name}[]`}
               defaultValue={item}
               onChange={(e) => handleItemChange(index, e.target.value)}
               className="w-full p-2 border border-gray-300 rounded resize-y min-h-[60px] text-sm"
@@ -47,27 +92,21 @@ export default function List({ name, initialItems }: ListProps) {
         type="button"
         onClick={addItem}
         className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:border-gray-200 disabled:bg-gray-500"
-        disabled={items.length == 10 ? true : false}
+        disabled={items.length >= 10}
       >
         Add {name.slice(0, 1).toUpperCase() + name.slice(1)}
       </button>
-      {items.length == 10 && <div role="alert" className="border-s-4 border-red-700 bg-red-50 p-4">
-        <div className="flex items-center gap-2 text-red-700">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
-            <path
-              fillRule="evenodd"
-              d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
-              clipRule="evenodd"
-            />
-          </svg>
 
-          <strong className="font-medium"> You can only have 10 {name} </strong>
+      {items.length >= 10 && (
+        <div role="alert" className="border-s-4 border-red-700 bg-red-50 p-4">
+          <div className="flex items-center gap-2 text-red-700">
+            <strong className="font-medium"> You can only have 10 {name} </strong>
+          </div>
+          <p className="mt-2 text-sm text-red-700">
+            If you would like to add more, please delete an item.
+          </p>
         </div>
-
-        <p className="mt-2 text-sm text-red-700">
-          If you would like to add more, please delete an item.
-        </p>
-      </div>}
+      )}
     </div>
   );
 }

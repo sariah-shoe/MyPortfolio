@@ -1,21 +1,39 @@
 // ExperienceChange.tsx
 import List from "./List.tsx"
 import type { ExperienceObject } from "../Shared/types.ts";
+import { useFormDirtyState } from "../../hooks/useFormDirtyState.ts";
 import { Form } from "react-router-dom";
 import FileListEditor from "./FileListEditor.tsx";
+import { useEffect, useRef, useState } from "react";
 
 interface ExperienceProps {
     experience: ExperienceObject;
     onSubmitStart?: (position: string) => void;
+    onDirtyChange?: (id: string, isDirty: boolean) => void;
 }
 
-export default function ExperienceChange({ experience, onSubmitStart }: ExperienceProps) {
+export default function ExperienceChange({ experience, onSubmitStart, onDirtyChange }: ExperienceProps) {
+    const baseline = {
+        position: experience.position ?? "",
+        company: experience.company ?? "",
+        startDate: experience.startDate?.slice(0, 10) ?? "",
+        endDate: experience.endDate?.slice(0, 10) ?? "",
+        extra: experience.extra ?? "",
+        // You can also include hidden “aggregate” fields later if you want
+    };
+
+    const { formRef, isDirty, childDirty } = useFormDirtyState({
+        baseline,
+        onDirtyChange: (dirty) => onDirtyChange?.(experience._id, dirty),
+        normalize: { startDate: v => v.slice(0,10), endDate: v => v.slice(0,10) } // already sliced above
+    });
+
     return (
         <div className="p-6 bg-white rounded-lg shadow space-y-4">
-            <Form 
-                method="delete" 
+            <Form
+                method="delete"
                 action={`/admin/experiences/${experience._id}`}
-                >
+            >
                 <button
                     type="submit"
                     className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
@@ -24,13 +42,30 @@ export default function ExperienceChange({ experience, onSubmitStart }: Experien
                 </button>
             </Form>
 
-            <Form 
-                method="put" 
+            <Form
+                method="put"
                 action={`/admin/experiences/${experience._id}`}
-                onSubmit={() => onSubmitStart?.(experience.position)}    
+                onSubmit={() => onSubmitStart?.(experience.position)}
+                ref={formRef}
             >
-                {/* Hidden input so that I can have my toast show the experience saved */}
-                <input type="hidden" name="position" value={experience.position}/>
+
+                {isDirty && <div role="alert" className="border-s-4 border-red-700 bg-red-50 p-4">
+                    <div className="flex items-center gap-2 text-red-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
+                            <path
+                                fillRule="evenodd"
+                                d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
+                                clipRule="evenodd"
+                            />
+                        </svg>
+
+                        <strong className="font-medium"> Unsaved Changes </strong>
+                    </div>
+
+                    <p className="mt-2 text-sm text-red-700">
+                        You have made changes to this experience. If you do not save the experience, you will lose your changes when you navigate away.
+                    </p>
+                </div>}
 
                 <div className="flex gap-4">
                     <fieldset className="mb-4">
@@ -108,6 +143,7 @@ export default function ExperienceChange({ experience, onSubmitStart }: Experien
                     <List
                         name="highlights"
                         initialItems={experience.highlights}
+                        onDirty={(dirty) => childDirty(dirty)}
                     />
                 </div>
 
@@ -116,12 +152,13 @@ export default function ExperienceChange({ experience, onSubmitStart }: Experien
                     <List
                         name="skills"
                         initialItems={experience.skills}
+                        onDirty={(dirty) => childDirty(dirty)}
                     />
                 </div>
 
                 <div className="mt-2">
                     <label className="font-semibold">Images:</label>
-                    <FileListEditor 
+                    <FileListEditor
                         initialFiles={experience.images}
                     />
                 </div>
