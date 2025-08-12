@@ -5,7 +5,6 @@ import { Form } from 'react-router-dom';
 export default function Contact() {
     return (
         <div>
-            <Header />
             <div className="flex flex-col">
                 <div className="flex justify-center mt-4">
                     <h2 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
@@ -54,7 +53,6 @@ export default function Contact() {
 
                 </div>
             </div>
-            <Footer />
         </div>
     );
 }

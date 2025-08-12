@@ -8,7 +8,6 @@ export default function ExperiencePage() {
     const { experience } = useLoaderData() as { experience: ExperienceObject}
     return (
         <div>
-            <Header />
             {/* This section holds the basic information, a carousel if there are images, and a blurb about what I did there */}
             <section>
                 <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 lg:px-8">
@@ -83,7 +82,6 @@ export default function ExperiencePage() {
                     </div>
                 </div>
             </div>
-            <Footer />
         </div>
     );
 }

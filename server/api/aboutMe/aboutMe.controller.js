@@ -1,5 +1,7 @@
 'use strict';
 import { AboutMe } from "./aboutMe.model.js";
+import { FileObject } from "../fileObject/fileObject.model.js";
+import mongoose from "mongoose";
 
 // Function to grab the one AboutMe object
 export async function index(req, res) {
@@ -18,59 +20,79 @@ export async function index(req, res) {
         return res.status(500).json({ error: "Server error" });
     }
 }
+// helper: ignore empty strings; allow null explicitly
+const normalizeIdInput = (v) => (v === '' ? undefined : v);
 
-// A function to update my one AboutMe object and create it if it doesn't exist
+const ensureFile = async (id, expectedType) => {
+  if (id === null) return { id: null };            // explicit clear
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return { error: `Invalid ObjectId: ${id}` };
+  }
+  const doc = await FileObject.findById(id).lean(); // existence check
+  if (!doc) return { error: `FileObject not found: ${id}` };
+  if (expectedType && doc.type !== expectedType) {
+    return { error: `FileObject ${id} must be type "${expectedType}", got "${doc.type}"` };
+  }
+  return { id };
+};
+
 export async function update(req, res) {
-    // In a try block to catch errors
-    try {
-        // Search to see if my AboutMe object exists
-        const existing = await AboutMe.findOne();
+  try {
+    const existing = await AboutMe.findOne();
 
-        // If it does exist, just do the update
-        if (existing) {
-            const updateFields = {};
+    // normalize incoming values: '' -> undefined (no change)
+    const headshotIn = normalizeIdInput(req.body.headshot);
+    const blurbIn = req.body.blurb; // strings can be '' intentionally
+    const resumeIn = normalizeIdInput(req.body.resume);
 
-            // Check to see what values the user sent to be updated
-            if (req.body.headshot !== undefined) {
-                const validFiles = await FileObject.find(req.body.headshot);
-                if (!validFiles) {
-                    return res.status(400).json({ error: "Image ID is invalid" })
-                }
-                updateFields.headshot = req.body.headshot;
-            }
-            if (req.body.blurb !== undefined) updateFields.blurb = req.body.blurb;
-            if (req.body.resume !== undefined) {
-                const validFiles = await FileObject.find(req.body.resume);
-                if (!validFiles) {
-                    return res.status(400).json({ error: "PDF ID is invalid" })
-                }
-                updateFields.resume = req.body.resume;
-            }
+    if (existing) {
+      const updateFields = {};
 
-            // Update the AboutMe with the values the user sent
-            const updated = await AboutMe.findOneAndUpdate({}, updateFields, {
-                new: true,
-                runValidators: true
-            });
+      if (headshotIn !== undefined) {
+        const ok = await ensureFile(headshotIn, 'image');
+        if (ok.error) return res.status(400).json({ error: ok.error });
+        updateFields.headshot = ok.id; // may be null to clear
+      }
 
-            // Return the result
-            return res.status(200).json(updated);
-        } else {
-            // Create a new document with my schema defaults
-            const created = await AboutMe.create({
-                headshot: req.body.headshot,
-                blurb: req.body.blurb,
-                resume: req.body.resume
-            });
+      if (blurbIn !== undefined) {
+        updateFields.blurb = blurbIn;
+      }
 
-            // Return my created object
-            return res.status(201).json(created);
-        }
-        // Catch user and server errors
-    } catch (err) {
-        if (err.name === "ValidationError" || err.name === "CastError") {
-            res.status(400).json({ error: err.message })
-        }
-        return res.status(500).json({ error: "Server error" });
+      if (resumeIn !== undefined) {
+        const ok = await ensureFile(resumeIn, 'pdf');
+        if (ok.error) return res.status(400).json({ error: ok.error });
+        updateFields.resume = ok.id; // may be null to clear
+      }
+
+      const updated = await AboutMe.findOneAndUpdate({}, updateFields, {
+        new: true,
+        runValidators: true,
+      }).populate(['headshot', 'resume']);
+      return res.status(200).json(updated);
     }
+
+    // create path: allow schema defaults to fill missing fields
+    const createData = {};
+    if (headshotIn !== undefined) {
+      const ok = await ensureFile(headshotIn, 'image');
+      if (ok.error) return res.status(400).json({ error: ok.error });
+      createData.headshot = ok.id;
+    }
+    if (blurbIn !== undefined) createData.blurb = blurbIn;
+    if (resumeIn !== undefined) {
+      const ok = await ensureFile(resumeIn, 'pdf');
+      if (ok.error) return res.status(400).json({ error: ok.error });
+      createData.resume = ok.id;
+    }
+
+    const created = await AboutMe.create(createData);
+    const populated = await AboutMe.findById(created._id).populate(['headshot', 'resume']);
+    return res.status(201).json(populated);
+  } catch (err) {
+    if (err.name === 'ValidationError' || err.name === 'CastError') {
+      return res.status(400).json({ error: err.message });
+    }
+    console.error(err);
+    return res.status(500).json({ error: 'Server error' });
+  }
 }

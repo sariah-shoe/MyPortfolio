@@ -28,7 +28,6 @@ export default function Projects() {
 
     return (
         <div>
-            <Header />
             <section>
                 <div className="px-4 py-8 sm:px-6 lg:px-8">
                     <div className="space-y-4 md:space-y-8">
@@ -144,7 +143,6 @@ export default function Projects() {
                     </div>
                 </div>
             </section>
-            <Footer />
         </div>
     );
 }

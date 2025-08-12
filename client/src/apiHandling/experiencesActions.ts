@@ -1,17 +1,15 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router-dom";
 import { redirect } from "react-router-dom";
 import type { ExperienceObject } from "../components/Shared/types";
+import { makeJson, fetchJson } from "./http";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
 async function load_all() {
-    const res = await fetch(`${apiUrl}api/experiences`);
-    if (!res.ok) {
-        throw new Error("Failed to load experiences");
+    const data = await fetchJson(`${apiUrl}api/experiences`);
+    if (!data) {
+        throw makeJson({ message: "Experiences not found" }, { status: 404, statusText: "Not found" });
     }
-
-    const data = await res.json();
-
     const formatted = data.experiences.map((exp: ExperienceObject) => ({
         ...exp,
         startDate: exp.startDate?.slice(0, 10),
@@ -22,18 +20,18 @@ async function load_all() {
 }
 
 async function load_one({ params }: LoaderFunctionArgs) {
-    const res = await fetch(`${apiUrl}api/experiences/${params.id}`);
-    if (!res) {
-        throw new Error("Failed to load experience");
+    const data = await fetchJson(`${apiUrl}api/experiences/${params.id}`)
+    if (!data) {
+        throw makeJson({ message: `Experience ${params.id} not found` }, { status: 404, statusText: "Not found" });
     }
-    const data = await res.json();
     return { experience: data };
 }
 
-async function create({ request }: { request: Request }) {
+// Create a new empty experience
+async function create() {
     const today = new Date().toISOString().slice(0, 10);
 
-    const res = await fetch(`${apiUrl}api/experiences`, {
+    await fetchJson(`${apiUrl}api/experiences`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -46,12 +44,8 @@ async function create({ request }: { request: Request }) {
             skills: [],
             images: [],
             extra: ""
-        }),
-    });
-
-    if (!res.ok) throw new Error("Failed to create experience");
-
-    const newExperience = await res.json();
+        })
+    })
 
     return redirect("/admin/experiences");
 }
@@ -102,21 +96,19 @@ async function modify({ request, params }: ActionFunctionArgs) {
         // Leave images empty for now or process if needed
         body.images = [];
 
-        const res = await fetch(`${apiUrl}api/experiences/${id}`, {
+        const data = await fetchJson(`${apiUrl}api/experiences/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
+            body: JSON.stringify(body)
         });
 
-        if (!res.ok) throw new Error("Failed to update experience");
+        if (!data) {
+            throw makeJson({ message: `Experience ${id} not found` }, { status: 404, statusText: "Not found" });
+        }
     }
 
     if (method === "DELETE") {
-        const res = await fetch(`${apiUrl}api/experiences/${id}`, {
-            method: "DELETE",
-        });
-
-        if (!res.ok) throw new Error("Failed to delete experience");
+        await fetchJson(`${apiUrl}api/experiences/${id}`, {method: "DELETE"});
     }
 
     return redirect(`/admin/experiences`);

@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 
 interface ListProps {
-  name: string; 
-  initialItems: string[];  
-  onDirty?: (isDirty: boolean) => void; 
+  name: string;
+  initialItems: string[];
+  onDirty?: (isDirty: boolean) => void;
 }
 
 export default function List({ name, initialItems, onDirty }: ListProps) {
@@ -15,8 +15,10 @@ export default function List({ name, initialItems, onDirty }: ListProps) {
   // Local dirty flag; only flips true on edit, resets when initialItems change
   const [isDirty, setIsDirty] = useState(false);
 
+  // List.tsx
   const norm = (arr: string[]) =>
-    arr.map((s) => (s ?? "").trim());
+    arr.map((s) => (s ?? "").trim()).filter(s => s !== "");
+
 
   // Precompute normalized baselines so comparisons are cheap & stable
   const baseline = useMemo(() => norm(initialItems), [initialItems]);

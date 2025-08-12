@@ -1,15 +1,20 @@
-import { Link, useLoaderData, Form, useNavigation } from "react-router-dom";
+import { Link, useLoaderData, Form, useNavigation, useNavigate } from "react-router-dom";
 import ProjectChange from "./ProjectChange";
 import type { ProjectObject } from "../Shared/types";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useUnsavedChangesGuard } from "../../hooks/useUnsavedChangesGuard";
 
 export default function ProjectCards() {
     const { allProjects } = useLoaderData() as { allProjects: ProjectObject[] }
     const navigation = useNavigation();
+    const navigate = useNavigate();
     const [showToast, setShowToast] = useState(false);
     const [wasSubmitting, setWasSubmitting] = useState(false);
     const [lastEdited, setLastEdited] = useState<string | null>(null);
     const lastEditedRef = useRef<string | null>(null);
+    const [dirtyExperiences, setDirtyExperiences] = useState<Record<string, boolean>>({});
+    const savingRef = useRef(false);
+    const guardBypassRef = useRef(false); // bypass guard for our own redirect
 
     useEffect(() => {
         if (navigation.state === "submitting" && navigation.formMethod?.toLowerCase() === "put") {
@@ -23,13 +28,45 @@ export default function ProjectCards() {
             setShowToast(true);
             setTimeout(() => setShowToast(false), 3000);
             setWasSubmitting(false);
+            savingRef.current = false;
         }
     }, [navigation.state, wasSubmitting]);
+
+    const handleDirtyChange = (id: string, isDirty: boolean) => {
+        setDirtyExperiences(prev => ({
+            ...prev,
+            [id]: isDirty,
+        }))
+    }
+
+    // Names to show in the prompt
+    const dirtyIds = useMemo(
+        () => Object.entries(dirtyExperiences).filter(([, v]) => v).map(([id]) => id),
+        [dirtyExperiences]
+    );
+    const dirtyNames = useMemo(() => {
+        return dirtyIds
+            .map(id => {
+                const ex = allProjects.find(e => e._id === id);
+                return ex?.name || "Untitled Project";
+            })
+            .filter(Boolean);
+    }, [dirtyIds, allProjects]);
+
+    useUnsavedChangesGuard({
+        when: dirtyIds.length > 0,
+        names: dirtyNames,
+        suppress: savingRef.current || guardBypassRef.current, // ← include bypass
+        onConfirm: () => {
+            guardBypassRef.current = true;      // suppress the next nav
+            navigate("/admin", { replace: true });
+        },
+    });
 
     return (
         <div className="px-6 py-4">
             {showToast && (
-                <div role="alert" className="fixed top-4 right-4 z-50 rounded-md border border-gray-300 bg-white p-4 shadow-sm">
+                <div role="status" className="fixed top-4 right-4 z-50 rounded-md border border-gray-300 bg-white p-4 shadow-sm">
                     <div className="flex items-start gap-4">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -85,20 +122,23 @@ export default function ProjectCards() {
                 Back to Admin
             </Link>
             <div className="space-y-6">
-                {allProjects.map((project, idx) =>
+                {allProjects.map((project) =>
                     <ProjectChange
-                        key={idx}
+                        key={project._id}
                         project={project}
                         onSubmitStart={(position) => {
                             lastEditedRef.current = position;
+                            savingRef.current = true;
                         }}
-
+                        onDirtyChange={handleDirtyChange}
+                        onDangerousSubmit={() => {savingRef.current = true;}}
                     />
                 )}
 
                 <Form
                     method="POST"
                     action={`/admin/projects`}
+                    onSubmit={() => {savingRef.current = true;}}
                 >
                     <button
                         type="submit"

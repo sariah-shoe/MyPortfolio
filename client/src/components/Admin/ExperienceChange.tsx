@@ -4,15 +4,15 @@ import type { ExperienceObject } from "../Shared/types.ts";
 import { useFormDirtyState } from "../../hooks/useFormDirtyState.ts";
 import { Form } from "react-router-dom";
 import FileListEditor from "./FileListEditor.tsx";
-import { useEffect, useRef, useState } from "react";
 
 interface ExperienceProps {
     experience: ExperienceObject;
     onSubmitStart?: (position: string) => void;
+    onDangerousSubmit?: () => void;
     onDirtyChange?: (id: string, isDirty: boolean) => void;
 }
 
-export default function ExperienceChange({ experience, onSubmitStart, onDirtyChange }: ExperienceProps) {
+export default function ExperienceChange({ experience, onSubmitStart, onDirtyChange, onDangerousSubmit }: ExperienceProps) {
     const baseline = {
         position: experience.position ?? "",
         company: experience.company ?? "",
@@ -25,7 +25,6 @@ export default function ExperienceChange({ experience, onSubmitStart, onDirtyCha
     const { formRef, isDirty, childDirty } = useFormDirtyState({
         baseline,
         onDirtyChange: (dirty) => onDirtyChange?.(experience._id, dirty),
-        normalize: { startDate: v => v.slice(0,10), endDate: v => v.slice(0,10) } // already sliced above
     });
 
     return (
@@ -33,6 +32,7 @@ export default function ExperienceChange({ experience, onSubmitStart, onDirtyCha
             <Form
                 method="delete"
                 action={`/admin/experiences/${experience._id}`}
+                onSubmit={() => onDangerousSubmit?.()}
             >
                 <button
                     type="submit"
@@ -49,8 +49,8 @@ export default function ExperienceChange({ experience, onSubmitStart, onDirtyCha
                 ref={formRef}
             >
 
-                {isDirty && <div role="alert" className="border-s-4 border-red-700 bg-red-50 p-4">
-                    <div className="flex items-center gap-2 text-red-700">
+                {isDirty && <div role="status" className="border-s-4 border-yellow-700 bg-yellow-50 p-4">
+                    <div className="flex items-center gap-2 text-yellow-700">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
                             <path
                                 fillRule="evenodd"
@@ -62,7 +62,7 @@ export default function ExperienceChange({ experience, onSubmitStart, onDirtyCha
                         <strong className="font-medium"> Unsaved Changes </strong>
                     </div>
 
-                    <p className="mt-2 text-sm text-red-700">
+                    <p className="mt-2 text-sm text-yellow-700">
                         You have made changes to this experience. If you do not save the experience, you will lose your changes when you navigate away.
                     </p>
                 </div>}
@@ -125,7 +125,7 @@ export default function ExperienceChange({ experience, onSubmitStart, onDirtyCha
                         className="p-2 border border-gray-300 rounded"
                         placeholder="Start Date"
                         type="date"
-                        defaultValue={experience.startDate}
+                        defaultValue={experience.startDate?.slice(0, 10) ?? ""}
                         name="startDate"
                         required
                     />
@@ -133,7 +133,7 @@ export default function ExperienceChange({ experience, onSubmitStart, onDirtyCha
                         className="p-2 border border-gray-300 rounded"
                         placeholder="End Date"
                         type="date"
-                        defaultValue={experience.endDate}
+                        defaultValue={experience.endDate?.slice(0, 10) ?? ""}
                         name="endDate"
                     />
                 </div>

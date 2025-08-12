@@ -66,7 +66,7 @@ export default function ExperienceCards() {
     return (
         <div className="px-6 py-4">
             {showToast && (
-                <div role="alert" className="fixed top-4 right-4 z-50 rounded-md border border-gray-300 bg-white p-4 shadow-sm">
+                <div role="status" className="fixed top-4 right-4 z-50 rounded-md border border-gray-300 bg-white p-4 shadow-sm">
                     <div className="flex items-start gap-4">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -130,6 +130,7 @@ export default function ExperienceCards() {
                             lastEditedRef.current = position;
                             savingRef.current = true;
                         }}
+                        onDangerousSubmit={() => {savingRef.current = true;}}
                         onDirtyChange={handleDirtyChange}
                     />
                 ))}
@@ -137,6 +138,7 @@ export default function ExperienceCards() {
                 <Form
                     method="POST"
                     action={`/admin/experiences`}
+                    onSubmit={() => {savingRef.current = true;}}
                 >
                     <button
                         type="submit"

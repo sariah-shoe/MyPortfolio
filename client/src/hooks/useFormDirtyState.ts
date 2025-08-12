@@ -1,23 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Baseline = Record<string, string | null | undefined>;
 type Normalizers = Partial<Record<string, (v: string) => string>>;
 
 type Options = {
-  /** Canonical values from loader; when this object changes, we auto-reset to clean */
   baseline: Baseline;
-  /** Called when dirty flips */
   onDirtyChange?: (dirty: boolean) => void;
-  /** Optional per-field normalizers (e.g., dates to YYYY-MM-DD) */
   normalize?: Normalizers;
 };
 
-/**
- * Form-level dirty tracking for uncontrolled forms.
- * - Flips dirty -> true on any input edit diverging from baseline.
- * - Flips dirty -> false when baseline changes (after save/loader).
- * - Exposes childDirty() so subcomponents (List, FileListEditor) can mark dirty.
- */
 export function useFormDirtyState({ baseline, onDirtyChange, normalize = {} }: Options) {
   const formRef = useRef<HTMLFormElement | null>(null);
   const [isDirty, setIsDirty] = useState(false);
@@ -28,16 +19,23 @@ export function useFormDirtyState({ baseline, onDirtyChange, normalize = {} }: O
     return f ? f(str) : str;
   };
 
+  // 🔑 Stable signature of baseline VALUES (order-independent, normalized)
+  const baselineKey = useMemo(() => {
+    const keys = Object.keys(baseline).sort();
+    const normalized: Record<string, string> = {};
+    for (const k of keys) normalized[k] = norm(k, baseline[k]);
+    return JSON.stringify(normalized);
+    // we want to recompute if caller provides a new baseline object OR new normalizers
+  }, [baseline, normalize]);
+
   const differsFromBaseline = (fd: FormData) => {
     for (const key of Object.keys(baseline)) {
-      const current = norm(key, fd.get(key));
-      const base = norm(key, baseline[key]);
-      if (current !== base) return true;
+      if (norm(key, fd.get(key)) !== norm(key, baseline[key])) return true;
     }
     return false;
   };
 
-  // Set dirty on any input change if diverged; never clear here
+  // Set dirty on any input edit; never clear here
   useEffect(() => {
     const handleInput = () => {
       if (!formRef.current || isDirty) return;
@@ -50,20 +48,19 @@ export function useFormDirtyState({ baseline, onDirtyChange, normalize = {} }: O
     const el = formRef.current;
     el?.addEventListener("input", handleInput);
     return () => el?.removeEventListener("input", handleInput);
-  }, [isDirty, baseline, normalize, onDirtyChange]);
+    // ✅ depend on baselineKey (not baseline object)
+  }, [isDirty, baselineKey, onDirtyChange]);
 
-  // Reset to clean when baseline changes (after successful save/loader)
+  // Reset to clean ONLY when baseline VALUES change (after save/loader)
   useEffect(() => {
     if (isDirty) {
       setIsDirty(false);
       onDirtyChange?.(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [baseline]); // only when canonical values object changes
+  }, [baselineKey]);
 
-  // For children to mark the form dirty; we don't flip back to false here
   const childDirty = (dirty: boolean) => {
-    if (!dirty) return; // we only escalate to true; reset happens via baseline change
+    if (!dirty) return; // only escalate to true; resets via baseline change
     setIsDirty(prev => {
       if (prev) return prev;
       onDirtyChange?.(true);

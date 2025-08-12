@@ -2,18 +2,37 @@ import List from "./List.tsx";
 import type { ProjectObject } from "../Shared/types.ts";
 import { Form } from "react-router-dom";
 import FileListEditor from "./FileListEditor.tsx";
+import { useFormDirtyState } from "../../hooks/useFormDirtyState.ts";
 
 interface ProjectProps {
     project: ProjectObject;
     onSubmitStart?: (position: string) => void;
+    onDangerousSubmit?: () => void;
+    onDirtyChange?: (id: string, isDirty: boolean) => void;
 }
 
-export default function ProjectChange({ project, onSubmitStart }: ProjectProps) {
+export default function ProjectChange({ project, onSubmitStart, onDirtyChange, onDangerousSubmit }: ProjectProps) {
+    const baseline = {
+        name: project.name ?? "",
+        gitLink: project.gitLink ?? "",
+        startDate: project.startDate?.slice(0, 10) ?? "",
+        endDate: project.endDate?.slice(0, 10) ?? "",
+        extra: project.extra ?? "",
+        replitLink: project.replitLink,
+        // You can also include hidden “aggregate” fields later if you want
+    };
+
+    const { formRef, isDirty, childDirty } = useFormDirtyState({
+        baseline,
+        onDirtyChange: (dirty) => onDirtyChange?.(project._id, dirty),
+    });
+
     return (
         <div className="p-6 bg-white rounded-lg shadow space-y-4">
             <Form
                 method="DELETE"
                 action={`/admin/projects/${project._id}`}
+                onSubmit={() => onDangerousSubmit?.()}
             >
                 <button
                     type="submit"
@@ -25,8 +44,28 @@ export default function ProjectChange({ project, onSubmitStart }: ProjectProps) 
             <Form
                 method="PUT"
                 action={`/admin/projects/${project._id}`}
-                onSubmit={() => onSubmitStart?.(project.name)} 
+                onSubmit={() => onSubmitStart?.(project.name)}
+                ref={formRef}
             >
+
+                {isDirty && <div role="alert" className="border-s-4 border-yellow-700 bg-yellow-50 p-4">
+                    <div className="flex items-center gap-2 text-yellow-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
+                            <path
+                                fillRule="evenodd"
+                                d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
+                                clipRule="evenodd"
+                            />
+                        </svg>
+
+                        <strong className="font-medium"> Unsaved Changes </strong>
+                    </div>
+
+                    <p className="mt-2 text-sm text-yellow-700">
+                        You have made changes to this project. If you do not save the project, you will lose your changes when you navigate away.
+                    </p>
+                </div>}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input
                         className="p-2 border border-gray-300 rounded"
@@ -39,7 +78,7 @@ export default function ProjectChange({ project, onSubmitStart }: ProjectProps) 
                     <input
                         className="p-2 border border-gray-300 rounded"
                         placeholder="Start Date"
-                        defaultValue={project.startDate}
+                        defaultValue={project.startDate?.slice(0, 10) ?? ""}
                         name="startDate"
                         type="date"
                         required
@@ -47,7 +86,7 @@ export default function ProjectChange({ project, onSubmitStart }: ProjectProps) 
                     <input
                         className="p-2 border border-gray-300 rounded"
                         placeholder="End Date"
-                        defaultValue={project.endDate}
+                        defaultValue={project.endDate?.slice(0, 10) ?? ""}
                         name="endDate"
                         type="date"
                     />
@@ -68,7 +107,7 @@ export default function ProjectChange({ project, onSubmitStart }: ProjectProps) 
                 </div>
                 <div>
                     <label className="font-semibold">Images:</label>
-                    <FileListEditor 
+                    <FileListEditor
                         initialFiles={project.images}
                     />
                 </div>
@@ -77,6 +116,7 @@ export default function ProjectChange({ project, onSubmitStart }: ProjectProps) 
                     <List
                         name="highlights"
                         initialItems={project.highlights}
+                        onDirty={(dirty) => childDirty(dirty)}
                     />
                 </div>
                 <div>
@@ -84,6 +124,7 @@ export default function ProjectChange({ project, onSubmitStart }: ProjectProps) 
                     <List
                         name="skills"
                         initialItems={project.skills}
+                        onDirty={(dirty) => childDirty(dirty)}
                     />
                 </div>
                 <div>
