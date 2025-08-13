@@ -57,49 +57,38 @@ async function modify({ request, params }: ActionFunctionArgs) {
     const id = params.id;
 
     if (method === "PUT") {
-        const rawFields = {
-            position: formData.get("position")?.toString(),
-            company: formData.get("company")?.toString(),
-            typeEx: formData.get("typeEx")?.toString(),
-            startDate: formData.get("startDate")?.toString(),
-            endDate: formData.get("endDate")?.toString(),
-            extra: formData.get("extra")?.toString(),
-        };
+        // 1) Scalars: keep empty strings so fields can be cleared
+        const body: Record<string, any> = Object.fromEntries(
+            Array.from(formData.entries())
+                .filter(([k]) =>
+                    !k.startsWith("highlights[") &&
+                    !k.startsWith("skills[") &&
+                    !k.startsWith("images[") // if you later use images[] in the form
+                )
+                .map(([k, v]) => [k, v.toString()])
+        );
 
-        // Remove blank string fields
-        const body: Record<string, any> = {};
-        for (const [key, value] of Object.entries(rawFields)) {
-            if (value && value.trim() !== "") {
-                body[key] = value;
-            }
-        }
+        // 2) Arrays: trim; drop empty; and IMPORTANT: send [] if user cleared all
+        const getArray = (prefix: string) =>
+            Array.from(formData.entries())
+                .filter(([k]) => k.startsWith(prefix))
+                .map(([, v]) => v.toString().trim())
+                .filter((v) => v !== "");
 
-        // Extract highlights[] and skills[] from form entries
-        const highlights = Array.from(formData.entries())
-            .filter(([key]) => key.startsWith("highlights["))
-            .map(([, value]) => value.toString())
-            .filter(v => v.trim() !== "");
+        const highlights = getArray("highlights[");
+        const skills = getArray("skills[");
 
-        if (highlights.length > 0) {
-            body.highlights = highlights;
-        }
+        body.highlights = highlights; // [] will clear on backend
+        body.skills = skills;         // [] will clear on backend
 
-        const skills = Array.from(formData.entries())
-            .filter(([key]) => key.startsWith("skills["))
-            .map(([, value]) => value.toString())
-            .filter(v => v.trim() !== "");
-
-        if (skills.length > 0) {
-            body.skills = skills;
-        }
-
-        // Leave images empty for now or process if needed
-        body.images = [];
+        // If you’re not handling images yet, either omit images entirely
+        // or send [] to clear them explicitly:
+        // body.images = [];
 
         const data = await fetchJson(`${apiUrl}api/experiences/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body)
+            body: JSON.stringify(body),
         });
 
         if (!data) {
@@ -108,7 +97,7 @@ async function modify({ request, params }: ActionFunctionArgs) {
     }
 
     if (method === "DELETE") {
-        await fetchJson(`${apiUrl}api/experiences/${id}`, {method: "DELETE"});
+        await fetchJson(`${apiUrl}api/experiences/${id}`, { method: "DELETE" });
     }
 
     return redirect(`/admin/experiences`);

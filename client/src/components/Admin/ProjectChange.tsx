@@ -3,27 +3,36 @@ import type { ProjectObject } from "../Shared/types.ts";
 import { Form } from "react-router-dom";
 import FileListEditor from "./FileListEditor.tsx";
 import { useFormDirtyState } from "../../hooks/useFormDirtyState.ts";
+import { useMemo } from "react";
 
 interface ProjectProps {
     project: ProjectObject;
     onSubmitStart?: (position: string) => void;
     onDangerousSubmit?: () => void;
     onDirtyChange?: (id: string, isDirty: boolean) => void;
+    resetKey?: number;
 }
 
-export default function ProjectChange({ project, onSubmitStart, onDirtyChange, onDangerousSubmit }: ProjectProps) {
-    const baseline = {
+export default function ProjectChange({ project, onSubmitStart, onDirtyChange, onDangerousSubmit, resetKey }: ProjectProps) {
+    const baseline = useMemo(() => ({
         name: project.name ?? "",
         gitLink: project.gitLink ?? "",
+        replitLink: project.replitLink ?? "",
         startDate: project.startDate?.slice(0, 10) ?? "",
         endDate: project.endDate?.slice(0, 10) ?? "",
         extra: project.extra ?? "",
-        replitLink: project.replitLink,
-        // You can also include hidden “aggregate” fields later if you want
-    };
+    }), [
+        project.name,
+        project.gitLink,
+        project.replitLink,
+        project.startDate,
+        project.endDate,
+        project.extra,
+    ]);
 
     const { formRef, isDirty, childDirty } = useFormDirtyState({
         baseline,
+        resetKey,
         onDirtyChange: (dirty) => onDirtyChange?.(project._id, dirty),
     });
 

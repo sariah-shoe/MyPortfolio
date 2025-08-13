@@ -1,5 +1,3 @@
-import Header from '../HeaderFooter/header';
-import Footer from '../HeaderFooter/footer';
 import ProffToggle from '../Shared/ProffToggle';
 import SearchBar from '../Shared/SearchBar';
 import Filter from '../Shared/Filter';

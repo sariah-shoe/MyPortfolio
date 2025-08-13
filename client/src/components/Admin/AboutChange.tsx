@@ -1,7 +1,7 @@
 // AboutChange.tsx
 import { Link, Form, useLoaderData, useNavigation, useNavigate } from "react-router-dom";
 import type { AboutObject } from "../Shared/types";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useFormDirtyState } from "../../hooks/useFormDirtyState";
 import { useUnsavedChangesGuard } from "../../hooks/useUnsavedChangesGuard";
 
@@ -12,17 +12,21 @@ export default function AboutChange() {
 
     const [showToast, setShowToast] = useState(false);
     const [wasSubmitting, setWasSubmitting] = useState(false);
+    const [resetCounter, setResetCounter] = useState(0);
 
     // ---- form-level dirty tracking
-    const baseline = {
+    // Memoize baseline off loader data
+    const baseline = useMemo(() => ({
         blurb: aboutMeData.blurb ?? "",
-        // If you later want to include uploads, add stable fields here,
-        // e.g. headshotId: aboutMeData.headshot?.id ?? "", resumeId: aboutMeData.resume?.id ?? ""
-    };
+        // e.g. headshotId: aboutMeData.headshot?.id ?? "",
+        //      resumeId:   aboutMeData.resume?.id ?? "",
+    }), [aboutMeData.blurb /*, aboutMeData.headshot?.id, aboutMeData.resume?.id */]);
+
     const { formRef, isDirty, childDirty } = useFormDirtyState({
         baseline,
         // no onDirtyChange map needed since this page has a single form;
         // the guard just uses `isDirty` directly
+        resetKey: resetCounter,
     });
 
     // ---- suppress guard during PUT saves and for our own redirect
@@ -52,6 +56,7 @@ export default function AboutChange() {
             setTimeout(() => setShowToast(false), 3000);
             setWasSubmitting(false);
             savingRef.current = false; // allow guard again
+            setResetCounter(c => c + 1);
         }
     }, [navigation.state, wasSubmitting]);
 
@@ -60,12 +65,47 @@ export default function AboutChange() {
             {showToast && (
                 <div role="status" className="fixed top-4 right-4 z-50 rounded-md border border-gray-300 bg-white p-4 shadow-sm">
                     <div className="flex items-start gap-4">
-                        {/* …icon… */}
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth="1.5"
+                            stroke="currentColor"
+                            className="size-6 text-green-600"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                        </svg>
+
                         <div className="flex-1">
-                            <strong className="font-medium text-gray-900">Changes saved</strong>
-                            <p className="mt-0.5 text-sm text-gray-700">Your About Me changes have been saved.</p>
+                            <strong className="font-medium text-gray-900"> Changes saved </strong>
+
+                            <p className="mt-0.5 text-sm text-gray-700">{"Your changes to about me have been saved."}
+                            </p>
                         </div>
-                        {/* …dismiss button… */}
+
+                        <button
+                            className="-m-3 rounded-full p-1.5 text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700"
+                            type="button"
+                            aria-label="Dismiss alert"
+                            onClick={() => setShowToast(false)}
+                        >
+                            <span className="sr-only">Dismiss popup</span>
+
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth="1.5"
+                                stroke="currentColor"
+                                className="size-5"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
             )}
@@ -108,7 +148,7 @@ export default function AboutChange() {
                         <textarea
                             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                             rows={10}
-                            defaultValue={aboutMeData.blurb}
+                            defaultValue={aboutMeData.blurb ?? ""}
                             name="blurb"
                             maxLength={1000}
                         />
@@ -116,7 +156,9 @@ export default function AboutChange() {
                 </div>
 
                 <div className="mb-5">
-                    <img src={aboutMeData.headshot.url} alt="" />
+                    {aboutMeData.headshot?.url ? (<img src={aboutMeData.headshot.url} alt="Headshot of Sariah Shoemaker" />) : <div className="h-32 w-32 bg-gray-100 rounded-md grid place-items-center text-sm text-gray-500">
+                        No headshot
+                    </div>}
                     <label htmlFor="HeadshotFile" className="block rounded border border-gray-300 p-4 text-gray-900 shadow-sm sm:p-6">
                         <div className="flex items-center justify-center gap-4">
                             <span className="font-medium">Upload New Headshot</span>
@@ -134,13 +176,18 @@ export default function AboutChange() {
                 </div>
 
                 <div className="mb-5">
-                    <iframe
-                        src={aboutMeData.resume.url}
-                        width="100%"
-                        height="600px"
-                        loading="lazy"
-                        title="PDF-file"
-                    />
+                    {aboutMeData.resume?.url ?
+                        (<iframe
+                            src={aboutMeData.resume.url}
+                            width="100%"
+                            height="600px"
+                            loading="lazy"
+                            title="PDF-file"
+                        />) :
+                        <div className="p-3 border rounded text-sm text-gray-500">
+                            No resume uploaded
+                        </div>
+                    }
                     <label htmlFor="ResumeFile" className="block rounded border border-gray-300 p-4 text-gray-900 shadow-sm sm:p-6">
                         <div className="flex items-center justify-center gap-4">
                             <span className="font-medium">Upload New Resume</span>

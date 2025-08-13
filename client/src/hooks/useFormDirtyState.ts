@@ -7,11 +7,23 @@ type Options = {
   baseline: Baseline;
   onDirtyChange?: (dirty: boolean) => void;
   normalize?: Normalizers;
+  resetKey?: number | string;
 };
 
-export function useFormDirtyState({ baseline, onDirtyChange, normalize = {} }: Options) {
+export function useFormDirtyState({
+  baseline,
+  onDirtyChange,
+  normalize = {},
+  resetKey,
+}: Options) {
   const formRef = useRef<HTMLFormElement | null>(null);
   const [isDirty, setIsDirty] = useState(false);
+
+  // keep callback stable
+  const onDirtyRef = useRef(onDirtyChange);
+  useEffect(() => {
+    onDirtyRef.current = onDirtyChange;
+  }, [onDirtyChange]);
 
   const norm = (key: string, raw: FormDataEntryValue | string | null | undefined) => {
     const str = raw == null ? "" : typeof raw === "string" ? raw : String(raw);
@@ -19,13 +31,13 @@ export function useFormDirtyState({ baseline, onDirtyChange, normalize = {} }: O
     return f ? f(str) : str;
   };
 
-  // 🔑 Stable signature of baseline VALUES (order-independent, normalized)
+  // stable signature of baseline values
   const baselineKey = useMemo(() => {
     const keys = Object.keys(baseline).sort();
     const normalized: Record<string, string> = {};
     for (const k of keys) normalized[k] = norm(k, baseline[k]);
     return JSON.stringify(normalized);
-    // we want to recompute if caller provides a new baseline object OR new normalizers
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseline, normalize]);
 
   const differsFromBaseline = (fd: FormData) => {
@@ -35,35 +47,47 @@ export function useFormDirtyState({ baseline, onDirtyChange, normalize = {} }: O
     return false;
   };
 
-  // Set dirty on any input edit; never clear here
+  // Set dirty on first divergence; never clear here
   useEffect(() => {
-    const handleInput = () => {
-      if (!formRef.current || isDirty) return;
-      const fd = new FormData(formRef.current);
+    const el = formRef.current;
+    if (!el) return;
+
+    const onInput = () => {
+      if (isDirty) return;
+      const fd = new FormData(el);
       if (differsFromBaseline(fd)) {
         setIsDirty(true);
-        onDirtyChange?.(true);
+        onDirtyRef.current?.(true);
       }
     };
-    const el = formRef.current;
-    el?.addEventListener("input", handleInput);
-    return () => el?.removeEventListener("input", handleInput);
-    // ✅ depend on baselineKey (not baseline object)
-  }, [isDirty, baselineKey, onDirtyChange]);
 
-  // Reset to clean ONLY when baseline VALUES change (after save/loader)
+    el.addEventListener("input", onInput);
+    return () => el.removeEventListener("input", onInput);
+  }, [isDirty, baselineKey]); // ← no onDirtyChange here
+
+  // Reset to clean when baseline VALUES change (server data/loader)
   useEffect(() => {
     if (isDirty) {
       setIsDirty(false);
-      onDirtyChange?.(false);
+      onDirtyRef.current?.(false);
     }
-  }, [baselineKey]);
+  }, [baselineKey]); // ← only when values actually changed
+
+  // Force clean when parent bumps resetKey (e.g., “saved with no diff”)
+  useEffect(() => {
+    if (resetKey === undefined) return;
+    setIsDirty(prev => {
+      if (!prev) return prev;
+      onDirtyRef.current?.(false);
+      return false;
+    });
+  }, [resetKey]); // ← no onDirtyChange dep
 
   const childDirty = (dirty: boolean) => {
-    if (!dirty) return; // only escalate to true; resets via baseline change
+    if (!dirty) return; // children never clear
     setIsDirty(prev => {
       if (prev) return prev;
-      onDirtyChange?.(true);
+      onDirtyRef.current?.(true);
       return true;
     });
   };

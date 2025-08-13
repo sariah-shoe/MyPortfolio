@@ -1,5 +1,5 @@
 // useUnsavedChangesGuard.ts
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBlocker } from "react-router";
 
@@ -25,11 +25,20 @@ export function useUnsavedChangesGuard({
   const navigate = useNavigate();
   const blocker = useBlocker(when);
 
+  // prevents calling proceed() multiple times while suppressed
+  const proceededRef = useRef(false);
+
   useEffect(() => {
-    if (blocker.state !== "blocked") return;
+    if (blocker.state !== "blocked"){
+      proceededRef.current = false; 
+      return;
+    }
 
     if (suppress) {
-      blocker.proceed();
+      if (!proceededRef.current){
+        proceededRef.current = true;
+        blocker.proceed();
+      }
       return;
     }
 

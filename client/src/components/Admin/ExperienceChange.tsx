@@ -4,26 +4,34 @@ import type { ExperienceObject } from "../Shared/types.ts";
 import { useFormDirtyState } from "../../hooks/useFormDirtyState.ts";
 import { Form } from "react-router-dom";
 import FileListEditor from "./FileListEditor.tsx";
+import { useMemo } from "react";
 
 interface ExperienceProps {
     experience: ExperienceObject;
+    resetKey?: number;
     onSubmitStart?: (position: string) => void;
     onDangerousSubmit?: () => void;
     onDirtyChange?: (id: string, isDirty: boolean) => void;
 }
 
-export default function ExperienceChange({ experience, onSubmitStart, onDirtyChange, onDangerousSubmit }: ExperienceProps) {
-    const baseline = {
+export default function ExperienceChange({ experience, onSubmitStart, onDirtyChange, onDangerousSubmit, resetKey }: ExperienceProps) {
+    const baseline = useMemo(() => ({
         position: experience.position ?? "",
         company: experience.company ?? "",
         startDate: experience.startDate?.slice(0, 10) ?? "",
         endDate: experience.endDate?.slice(0, 10) ?? "",
         extra: experience.extra ?? "",
-        // You can also include hidden “aggregate” fields later if you want
-    };
+    }), [
+        experience.position,
+        experience.company,
+        experience.startDate,
+        experience.endDate,
+        experience.extra,
+    ]);
 
     const { formRef, isDirty, childDirty } = useFormDirtyState({
         baseline,
+        resetKey,
         onDirtyChange: (dirty) => onDirtyChange?.(experience._id, dirty),
     });
 

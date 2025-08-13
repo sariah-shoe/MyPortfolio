@@ -2,7 +2,7 @@
 import { Link, useLoaderData, Form, useNavigation, useNavigate } from "react-router-dom";
 import ExperienceChange from "./ExperienceChange";
 import type { ExperienceObject } from "../Shared/types";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useUnsavedChangesGuard } from "../../hooks/useUnsavedChangesGuard";
 
 export default function ExperienceCards() {
@@ -16,6 +16,8 @@ export default function ExperienceCards() {
     const [dirtyExperiences, setDirtyExperiences] = useState<Record<string, boolean>>({});
     const savingRef = useRef(false);
     const guardBypassRef = useRef(false); // bypass guard for our own redirect
+    const [resetCounter, setResetCounter] = useState(0);
+    const lastSavedIdRef = useRef<string | null>(null);
 
     useEffect(() => {
         if (navigation.state === "submitting" && navigation.formMethod?.toLowerCase() === "put") {
@@ -25,6 +27,7 @@ export default function ExperienceCards() {
 
     useEffect(() => {
         if (wasSubmitting && navigation.state === "idle") {
+            setResetCounter((c) => c + 1);
             setLastEdited(lastEditedRef.current); // manually set lastEdited state
             setShowToast(true);
             setTimeout(() => setShowToast(false), 3000);
@@ -33,12 +36,22 @@ export default function ExperienceCards() {
         }
     }, [navigation.state, wasSubmitting]);
 
-    const handleDirtyChange = (id: string, isDirty: boolean) => {
-        setDirtyExperiences(prev => ({
-            ...prev,
-            [id]: isDirty,
-        }))
-    }
+    const handleDirtyChange = useCallback((id: string, isDirty: boolean) => {
+        // Defer to the microtask queue to avoid "update during render" warning
+        // Use queueMicrotask if available, else Promise microtask fallback
+        const run = () => {
+            setDirtyExperiences(prev => {
+                // avoid needless updates
+                if (prev[id] === isDirty) return prev;
+                return { ...prev, [id]: isDirty };
+            });
+        };
+        if (typeof queueMicrotask === "function") {
+            queueMicrotask(run);
+        } else {
+            Promise.resolve().then(run);
+        }
+    }, []);
 
     // Names to show in the prompt
     const dirtyIds = useMemo(
@@ -126,11 +139,13 @@ export default function ExperienceCards() {
                     <ExperienceChange
                         key={experience._id}
                         experience={experience}
+                        resetKey={lastSavedIdRef.current === experience._id ? resetCounter : undefined}
                         onSubmitStart={(position) => {
                             lastEditedRef.current = position;
+                            lastSavedIdRef.current = experience._id;
                             savingRef.current = true;
                         }}
-                        onDangerousSubmit={() => {savingRef.current = true;}}
+                        onDangerousSubmit={() => { savingRef.current = true; }}
                         onDirtyChange={handleDirtyChange}
                     />
                 ))}
@@ -138,7 +153,7 @@ export default function ExperienceCards() {
                 <Form
                     method="POST"
                     action={`/admin/experiences`}
-                    onSubmit={() => {savingRef.current = true;}}
+                    onSubmit={() => { savingRef.current = true; }}
                 >
                     <button
                         type="submit"

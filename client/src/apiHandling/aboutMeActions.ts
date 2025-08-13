@@ -15,6 +15,7 @@ async function update({ request }: { request: Request }) {
     const formData = await request.formData();
     // Convert formData to a plain object
     const payload = Object.fromEntries(formData);
+    console.log(JSON.stringify(payload));
 
     await fetchJson(`${apiUrl}api/aboutMe`, {
         method: "PUT",
@@ -22,7 +23,7 @@ async function update({ request }: { request: Request }) {
         body: JSON.stringify(payload)
     })
 
-    return redirect("/admin/aboutMe");
+    return redirect("/admin/about");
 }
 
 

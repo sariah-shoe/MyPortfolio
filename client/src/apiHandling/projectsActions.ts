@@ -1,15 +1,15 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router-dom";
 import { redirect } from "react-router-dom";
 import type { ProjectObject } from "../components/Shared/types";
+import { makeJson, fetchJson } from "./http";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
 async function load_all() {
-    const res = await fetch(`${apiUrl}api/projects`);
-    if (!res.ok) {
-        throw new Error("Failed to load projects]");
+    const data = await fetchJson(`${apiUrl}api/projects`);
+    if (!data) {
+        throw makeJson({ message: "Experiences not found" }, { status: 404, statusText: "Not found" });
     }
-    const data = await res.json();
 
     const formatted = data.projects.map((exp: ProjectObject) => ({
         ...exp,
@@ -20,18 +20,17 @@ async function load_all() {
 }
 
 async function load_one({ params }: LoaderFunctionArgs) {
-    const res = await fetch(`${apiUrl}api/projects/${params.id}`);
-    if (!res) {
-        throw new Error("Failed to load project");
+    const data = await fetchJson(`${apiUrl}api/projects/${params.id}`);
+    if (!data) {
+        throw makeJson({ message: `Experience ${params.id} not found` }, { status: 404, statusText: "Not found" });
     }
-    const data = await res.json();
     return { project: data };
 }
 
-async function create({ request }: { request: Request }) {
+async function create() {
     const today = new Date().toISOString().slice(0, 10);
 
-    const res = await fetch(`${apiUrl}api/projects`, {
+    await fetchJson(`${apiUrl}api/projects`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -47,10 +46,6 @@ async function create({ request }: { request: Request }) {
         }),
     });
 
-    if (!res.ok) throw new Error("Failed to create project");
-
-    const newProject = await res.json();
-
     return redirect("/admin/projects");
 }
 
@@ -61,60 +56,47 @@ async function modify({ request, params }: ActionFunctionArgs) {
     const id = params.id;
 
     if (method === "PUT") {
-        const rawFields = {
-            name: formData.get("name")?.toString(),
-            startDate: formData.get("startDate")?.toString(),
-            endDate: formData.get("endDate")?.toString(),
-            gitLink: formData.get("gitLink")?.toString(),
-            replitLink: formData.get("replitLink")?.toString(),
-            extra: formData.get("extra")?.toString(),
-        };
+        const entries = Array.from(formData.entries());
 
-        // Remove blank string fields
-        const body: Record<string, any> = {};
-        for (const [key, value] of Object.entries(rawFields)) {
-            if (value && value.trim() !== "") {
-                body[key] = value;
-            }
-        }
+        // 1) Scalars: use Object.fromEntries but exclude array-style keys
+        const body: Record<string, any> = Object.fromEntries(
+            entries
+                .filter(
+                    ([k]) =>
+                        !k.startsWith("highlights[") &&
+                        !k.startsWith("skills[") &&
+                        !k.startsWith("images[") // if you later add images[] inputs
+                )
+                .map(([k, v]) => [k, v.toString()]) // preserve "" for clears
+        );
 
-        // Extract highlights[] and skills[] from form entries
-        const highlights = Array.from(formData.entries())
-            .filter(([key]) => key.startsWith("highlights["))
-            .map(([, value]) => value.toString())
-            .filter(v => v.trim() !== "");
+        // 2) Arrays: trim, drop empties; still send [] to clear when user removed all
+        const toArray = (prefix: string) =>
+            entries
+                .filter(([k]) => k.startsWith(prefix))
+                .map(([, v]) => v.toString().trim())
+                .filter((v) => v !== "");
 
-        if (highlights.length > 0) {
-            body.highlights = highlights;
-        }
+        body.highlights = toArray("highlights[");
+        body.skills = toArray("skills[");
 
-        const skills = Array.from(formData.entries())
-            .filter(([key]) => key.startsWith("skills["))
-            .map(([, value]) => value.toString())
-            .filter(v => v.trim() !== "");
-
-        if (skills.length > 0) {
-            body.skills = skills;
-        }
-
-        // Leave images empty for now or process if needed
+        // If you want “clear images” behavior for now, explicitly send []:
         body.images = [];
 
-        const res = await fetch(`${apiUrl}api/projects/${id}`, {
+        const data = await fetchJson(`${apiUrl}api/projects/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
         });
 
-        if (!res.ok) throw new Error("Failed to update project");
+        if (!data) {
+            throw makeJson({ message: `Project ${id} not found` }, { status: 404, statusText: "Not found" });
+        }
+
     }
 
     if (method === "DELETE") {
-        const res = await fetch(`${apiUrl}api/projects/${id}`, {
-            method: "DELETE",
-        });
-
-        if (!res.ok) throw new Error("Failed to delete project");
+        await fetchJson(`${apiUrl}api/projects/${id}`, {method: "DELETE",});
     }
 
     return redirect(`/admin/projects`);

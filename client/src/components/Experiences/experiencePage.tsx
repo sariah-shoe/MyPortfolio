@@ -1,5 +1,3 @@
-import Header from '../HeaderFooter/header';
-import Footer from '../HeaderFooter/footer';
 import CustomCarousel from '../Shared/CustomCarousel';
 import type { ExperienceObject } from '../Shared/types';
 import { useLoaderData } from 'react-router-dom';

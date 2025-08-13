@@ -1,7 +1,7 @@
 import { Link, useLoaderData, Form, useNavigation, useNavigate } from "react-router-dom";
 import ProjectChange from "./ProjectChange";
 import type { ProjectObject } from "../Shared/types";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useUnsavedChangesGuard } from "../../hooks/useUnsavedChangesGuard";
 
 export default function ProjectCards() {
@@ -12,9 +12,11 @@ export default function ProjectCards() {
     const [wasSubmitting, setWasSubmitting] = useState(false);
     const [lastEdited, setLastEdited] = useState<string | null>(null);
     const lastEditedRef = useRef<string | null>(null);
-    const [dirtyExperiences, setDirtyExperiences] = useState<Record<string, boolean>>({});
+    const [dirtyProjects, setDirtyProjects] = useState<Record<string, boolean>>({});
     const savingRef = useRef(false);
     const guardBypassRef = useRef(false); // bypass guard for our own redirect
+    const [resetCounter, setReseetCounter] = useState(0);
+    const lastSavedIdRef = useRef<string | null>(null);
 
     useEffect(() => {
         if (navigation.state === "submitting" && navigation.formMethod?.toLowerCase() === "put") {
@@ -29,20 +31,22 @@ export default function ProjectCards() {
             setTimeout(() => setShowToast(false), 3000);
             setWasSubmitting(false);
             savingRef.current = false;
+            setReseetCounter(c => c + 1);
         }
     }, [navigation.state, wasSubmitting]);
 
-    const handleDirtyChange = (id: string, isDirty: boolean) => {
-        setDirtyExperiences(prev => ({
-            ...prev,
-            [id]: isDirty,
-        }))
-    }
+    const handleDirtyChange = useCallback((id: string, isDirty: boolean) => {
+        const run = () => {
+            setDirtyProjects(prev => (prev[id] === isDirty ? prev : { ...prev, [id]: isDirty }));
+        };
+        if (typeof queueMicrotask === "function") queueMicrotask(run);
+        else Promise.resolve().then(run);
+    }, []);
 
     // Names to show in the prompt
     const dirtyIds = useMemo(
-        () => Object.entries(dirtyExperiences).filter(([, v]) => v).map(([id]) => id),
-        [dirtyExperiences]
+        () => Object.entries(dirtyProjects).filter(([, v]) => v).map(([id]) => id),
+        [dirtyProjects]
     );
     const dirtyNames = useMemo(() => {
         return dirtyIds
@@ -126,19 +130,21 @@ export default function ProjectCards() {
                     <ProjectChange
                         key={project._id}
                         project={project}
+                        resetKey={lastSavedIdRef.current === project._id ? resetCounter : undefined}
                         onSubmitStart={(position) => {
                             lastEditedRef.current = position;
+                            lastSavedIdRef.current = project._id;
                             savingRef.current = true;
                         }}
                         onDirtyChange={handleDirtyChange}
-                        onDangerousSubmit={() => {savingRef.current = true;}}
+                        onDangerousSubmit={() => { savingRef.current = true; }}
                     />
                 )}
 
                 <Form
                     method="POST"
                     action={`/admin/projects`}
-                    onSubmit={() => {savingRef.current = true;}}
+                    onSubmit={() => { savingRef.current = true; }}
                 >
                     <button
                         type="submit"
