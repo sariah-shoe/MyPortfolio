@@ -31,7 +31,7 @@ export async function fetchJson(input: RequestInfo, init?: RequestInit) {
   // Non-2xx -> try to surface server JSON; otherwise use status text
   if (!res.ok) {
     let data: any = null;
-    try { data = await res.json(); } catch { }
+    try { data = await res.json(); } catch {}
     throw new Response(JSON.stringify({
       message: data?.message ?? data?.error ?? res.statusText ?? "Request failed",
       errors: data?.errors,
@@ -49,8 +49,55 @@ export async function fetchJson(input: RequestInfo, init?: RequestInit) {
   const text = await res.text();
   if (!text) return null;
 
-  // If it's JSON, parse; otherwise return text
-  // (optional: you can require JSON by checking content-type)
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
+/**
+ * Submit multipart/form-data (e.g., images/PDFs).
+ * - Do NOT set Content-Type; the browser sets the boundary.
+ * - Same error behavior as fetchJson so your errorElement keeps working.
+ */
+export async function fetchForm(input: RequestInfo, formData: FormData, init?: RequestInit) {
+  let res: Response;
+
+  try {
+    res = await fetch(input, {
+      ...init,
+      // default to POST unless caller overrides (e.g., PUT)
+      method: init?.method ?? "POST",
+      body: formData,
+      // IMPORTANT: do NOT add headers["Content-Type"] here
+    });
+  } catch {
+    throw new Response(JSON.stringify({ message: "Network error. Please try again later." }), {
+      status: 503,
+      statusText: "Service Unavailable",
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  if (!res.ok) {
+    let data: any = null;
+    try { data = await res.json(); } catch {}
+    throw new Response(JSON.stringify({
+      message: data?.message ?? data?.error ?? res.statusText ?? "Request failed",
+      errors: data?.errors,
+    }), {
+      status: res.status,
+      statusText: res.statusText,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  if (res.status === 204 || res.status === 205 || init?.method === "HEAD") return null;
+
+  const text = await res.text();
+  if (!text) return null;
+
   try {
     return JSON.parse(text);
   } catch {

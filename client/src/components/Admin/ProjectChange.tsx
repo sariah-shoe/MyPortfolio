@@ -1,157 +1,229 @@
 import List from "./List.tsx";
 import type { ProjectObject } from "../Shared/types.ts";
-import { Form } from "react-router-dom";
+import { Form, useNavigation } from "react-router-dom";
 import FileListEditor from "./FileListEditor.tsx";
 import { useFormDirtyState } from "../../hooks/useFormDirtyState.ts";
 import { useMemo } from "react";
 
 interface ProjectProps {
-    project: ProjectObject;
-    onSubmitStart?: (position: string) => void;
-    onDangerousSubmit?: () => void;
-    onDirtyChange?: (id: string, isDirty: boolean) => void;
-    resetKey?: number;
+  project: ProjectObject;
+  onSubmitStart?: (position: string) => void;
+  onDangerousSubmit?: () => void;
+  onDirtyChange?: (id: string, isDirty: boolean) => void;
+  resetKey?: number;
 }
 
-export default function ProjectChange({ project, onSubmitStart, onDirtyChange, onDangerousSubmit, resetKey }: ProjectProps) {
-    const baseline = useMemo(() => ({
-        name: project.name ?? "",
-        gitLink: project.gitLink ?? "",
-        replitLink: project.replitLink ?? "",
-        startDate: project.startDate?.slice(0, 10) ?? "",
-        endDate: project.endDate?.slice(0, 10) ?? "",
-        extra: project.extra ?? "",
-    }), [
-        project.name,
-        project.gitLink,
-        project.replitLink,
-        project.startDate,
-        project.endDate,
-        project.extra,
-    ]);
+export default function ProjectChange({
+  project,
+  onSubmitStart,
+  onDirtyChange,
+  onDangerousSubmit,
+  resetKey,
+}: ProjectProps) {
+  const baseline = useMemo(
+    () => ({
+      name: project.name ?? "",
+      gitLink: project.gitLink ?? "",
+      replitLink: project.replitLink ?? "",
+      startDate: project.startDate?.slice(0, 10) ?? "",
+      endDate: project.endDate?.slice(0, 10) ?? "",
+      extra: project.extra ?? "",
+    }),
+    [
+      project.name,
+      project.gitLink,
+      project.replitLink,
+      project.startDate,
+      project.endDate,
+      project.extra,
+    ],
+  );
 
-    const { formRef, isDirty, childDirty } = useFormDirtyState({
-        baseline,
-        resetKey,
-        onDirtyChange: (dirty) => onDirtyChange?.(project._id, dirty),
-    });
+  const { formRef, isDirty, childDirty } = useFormDirtyState({
+    baseline,
+    resetKey,
+    onDirtyChange: (dirty) => onDirtyChange?.(project._id, dirty),
+  });
 
-    return (
-        <div className="p-6 bg-white rounded-lg shadow space-y-4">
-            <Form
-                method="DELETE"
-                action={`/admin/projects/${project._id}`}
-                onSubmit={() => onDangerousSubmit?.()}
-            >
-                <button
-                    type="submit"
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                >
-                    Delete project
-                </button>
-            </Form>
-            <Form
-                method="PUT"
-                action={`/admin/projects/${project._id}`}
-                onSubmit={() => onSubmitStart?.(project.name)}
-                ref={formRef}
-            >
+  // Loading overlay state (for this specific card only)
+  const navigation = useNavigation();
+  const targetAction = `/admin/projects/${project._id}`;
+  const isThisCardSubmitting =
+    navigation.state === "submitting" &&
+    (navigation.formAction?.endsWith(targetAction) ?? false);
 
-                {isDirty && <div role="alert" className="border-s-4 border-yellow-700 bg-yellow-50 p-4">
-                    <div className="flex items-center gap-2 text-yellow-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
-                            <path
-                                fillRule="evenodd"
-                                d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
-                                clipRule="evenodd"
-                            />
-                        </svg>
+  const method = navigation.formMethod?.toLowerCase();
+  const isSaving = isThisCardSubmitting && method === "put";
+  const isDeleting = isThisCardSubmitting && method === "delete";
+  const isBusy = isSaving || isDeleting;
 
-                        <strong className="font-medium"> Unsaved Changes </strong>
-                    </div>
+  const overlayMessage = isDeleting ? "Deleting project…" : "Saving project…";
 
-                    <p className="mt-2 text-sm text-yellow-700">
-                        You have made changes to this project. If you do not save the project, you will lose your changes when you navigate away.
-                    </p>
-                </div>}
+  return (
+    <div
+      className="relative p-6 bg-white rounded-lg shadow space-y-4"
+      aria-busy={isBusy}
+    >
+      {/* Full-card dimmer overlay */}
+      {isBusy && (
+        <div className="absolute inset-0 z-20 bg-white/70 backdrop-blur-sm pointer-events-none" />
+      )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input
-                        className="p-2 border border-gray-300 rounded"
-                        placeholder="Name"
-                        defaultValue={project.name}
-                        name="name"
-                        required
-                        maxLength={100}
-                    />
-                    <input
-                        className="p-2 border border-gray-300 rounded"
-                        placeholder="Start Date"
-                        defaultValue={project.startDate?.slice(0, 10) ?? ""}
-                        name="startDate"
-                        type="date"
-                        required
-                    />
-                    <input
-                        className="p-2 border border-gray-300 rounded"
-                        placeholder="End Date"
-                        defaultValue={project.endDate?.slice(0, 10) ?? ""}
-                        name="endDate"
-                        type="date"
-                    />
-                    <input
-                        className="p-2 border border-gray-300 rounded"
-                        placeholder="GitHub Link"
-                        defaultValue={project.gitLink}
-                        name="gitLink"
-                        maxLength={300}
-                    />
-                    <input
-                        className="p-2 border border-gray-300 rounded"
-                        placeholder="Replit Link"
-                        defaultValue={project.replitLink}
-                        name="replitLink"
-                        maxLength={300}
-                    />
-                </div>
-                <div>
-                    <label className="font-semibold">Images:</label>
-                    <FileListEditor
-                        initialFiles={project.images}
-                    />
-                </div>
-                <div>
-                    <label className="font-semibold">Highlights:</label>
-                    <List
-                        name="highlights"
-                        initialItems={project.highlights}
-                        onDirty={(dirty) => childDirty(dirty)}
-                    />
-                </div>
-                <div>
-                    <label className="font-semibold">Skills:</label>
-                    <List
-                        name="skills"
-                        initialItems={project.skills}
-                        onDirty={(dirty) => childDirty(dirty)}
-                    />
-                </div>
-                <div>
-                    <label className="font-semibold">Extra</label>
-                    <textarea
-                        className="w-full p-2 border border-gray-300 rounded"
-                        defaultValue={project.extra}
-                        name="extra"
-                        maxLength={2000}
-                    />
-                </div>
-                <button
-                    type="submit"
-                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                >
-                    Save
-                </button>
-            </Form>
+      {/* Sticky status banner (visible regardless of scroll) */}
+      {isBusy && (
+        <div
+          className="fixed left-1/2 top-4 z-50 -translate-x-1/2"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex items-center gap-3 rounded-full bg-gray-900 text-white/90 px-4 py-2 shadow-lg">
+            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" aria-hidden="true">
+              <circle
+                className="opacity-25"
+                cx="12" cy="12" r="10"
+                stroke="currentColor" strokeWidth="4" fill="none"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+              />
+            </svg>
+            <span className="text-sm font-medium">{overlayMessage}</span>
+          </div>
         </div>
-    )
+      )}
+
+      {/* Delete form */}
+      <Form
+        method="delete"
+        action={`/admin/projects/${project._id}`}
+        onSubmit={() => onDangerousSubmit?.()}
+      >
+        <button
+          type="submit"
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-60"
+          disabled={isBusy}
+        >
+          Delete project
+        </button>
+      </Form>
+
+      {/* Save form */}
+      <Form
+        method="put"
+        encType="multipart/form-data"
+        action={`/admin/projects/${project._id}`}
+        onSubmit={() => onSubmitStart?.(project.name)}
+        ref={formRef}
+      >
+        <fieldset disabled={isBusy} className={isBusy ? "pointer-events-none" : undefined}>
+          {isDirty && (
+            <div role="alert" className="border-s-4 border-yellow-700 bg-yellow-50 p-4">
+              <div className="flex items-center gap-2 text-yellow-700">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="size-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+
+                <strong className="font-medium"> Unsaved Changes </strong>
+              </div>
+
+              <p className="mt-2 text-sm text-yellow-700">
+                You have made changes to this project. If you do not save the project, you will lose your changes when you navigate away.
+              </p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              className="p-2 border border-gray-300 rounded"
+              placeholder="Name"
+              defaultValue={project.name}
+              name="name"
+              required
+              maxLength={100}
+            />
+            <input
+              className="p-2 border border-gray-300 rounded"
+              placeholder="Start Date"
+              defaultValue={project.startDate?.slice(0, 10) ?? ""}
+              name="startDate"
+              type="date"
+              required
+            />
+            <input
+              className="p-2 border border-gray-300 rounded"
+              placeholder="End Date"
+              defaultValue={project.endDate?.slice(0, 10) ?? ""}
+              name="endDate"
+              type="date"
+            />
+            <input
+              className="p-2 border border-gray-300 rounded"
+              placeholder="GitHub Link"
+              defaultValue={project.gitLink}
+              name="gitLink"
+              maxLength={300}
+            />
+            <input
+              className="p-2 border border-gray-300 rounded"
+              placeholder="Replit Link"
+              defaultValue={project.replitLink}
+              name="replitLink"
+              maxLength={300}
+            />
+          </div>
+
+          <div>
+            <label className="font-semibold">Highlights:</label>
+            <List
+              name="highlights"
+              initialItems={project.highlights}
+              onDirty={(dirty) => childDirty(dirty)}
+            />
+          </div>
+
+          <div>
+            <label className="font-semibold">Skills:</label>
+            <List
+              name="skills"
+              initialItems={project.skills}
+              onDirty={(dirty) => childDirty(dirty)}
+            />
+          </div>
+
+          <div>
+            <label className="font-semibold">Images:</label>
+            <FileListEditor initialFiles={project.images} resetKey={resetKey} />
+          </div>
+
+          <div>
+            <label className="font-semibold">Extra</label>
+            <textarea
+              className="w-full p-2 border border-gray-300 rounded"
+              defaultValue={project.extra}
+              name="extra"
+              maxLength={2000}
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-60"
+          >
+            Save
+          </button>
+        </fieldset>
+      </Form>
+    </div>
+  );
 }

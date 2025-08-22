@@ -1,125 +1,249 @@
-import { useState } from "react";
-import type { FileObject } from "../Shared/types";
+import { useRef, useState, useEffect } from "react";
+import type { FileObject as BaseFileObject } from "../Shared/types";
+
+type FileObject = BaseFileObject & { _id?: string };
 
 interface FileListEditorProps {
-    initialFiles: FileObject[];
+  initialFiles: FileObject[];
+  max?: number; // default 10
+  resetKey?: number;
 }
 
-export default function FileListEditor({ initialFiles }: FileListEditorProps) {
-    const [files, setFiles] = useState<FileObject[]>(initialFiles);
+export default function FileListEditor({
+  initialFiles,
+  max = 10,
+  resetKey = 0,
+}: FileListEditorProps) {
+  // Existing files (from the server)
+  const [files, setFiles] = useState<FileObject[]>(initialFiles);
 
-    const handleRemove = (index: number) => {
-        const updated = [...files];
-        updated.splice(index, 1);
-        setFiles(updated);
+  // Which existing files are marked for deletion
+  const [pendingDeletes, setPendingDeletes] = useState<Set<string>>(new Set());
+
+  // Newly selected files (live in the <input>, but we also keep them in state)
+  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [newPreviews, setNewPreviews] = useState<string[]>([]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const initialFilesKey = JSON.stringify(initialFiles);
+
+  // Reset after successful save or when new initial files arrive
+  useEffect(() => {
+    // Clear the actual <input type="file">
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+      // also clear any internal FileList
+      const dt = new DataTransfer();
+      fileInputRef.current.files = dt.files;
+    }
+
+    // Revoke all preview URLs and clear local state
+    newPreviews.forEach(URL.revokeObjectURL);
+    setNewPreviews([]);
+    setNewFiles([]);
+
+    // Unmark deletions and re-seed existing files
+    setPendingDeletes(new Set());
+    setFiles(initialFiles);
+  }, [resetKey, initialFilesKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cleanup previews on unmount
+  useEffect(() => {
+    return () => {
+      newPreviews.forEach(URL.revokeObjectURL);
     };
+  }, [newPreviews]);
 
-    const handleAdd = () => {
-        setFiles([
-            ...files,
-            {
-                type: "image",
-                url: "",
-                public_id: "",
-                uploadedAt: new Date().toISOString(),
-            },
-        ]);
-    };
+  const toggleDelete = (id?: string) => {
+    if (!id) return; // only existing files have ids
+    setPendingDeletes((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
 
-    const handleChange = (index: number, field: keyof FileObject, value: string) => {
-        const updated = [...files];
-        updated[index] = {
-            ...updated[index],
-            [field]: field === "uploadedAt" ? new Date(value).toISOString() : value,
-        };
-        setFiles(updated);
-    };
+  const existingCount = files.filter((f) => !pendingDeletes.has(String(f._id))).length;
+  const totalAfterAdd = existingCount + newFiles.length;
+  const atCap = totalAfterAdd >= max;
 
-    return (
-        <div className="space-y-4">
-            {files.map((file, index) => (
-                <div
-                    key={index}
-                    className="flex flex-col gap-4 border p-4 rounded shadow-sm bg-white"
+  const onNewFilesChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    const selected = Array.from(e.currentTarget.files ?? []);
+    if (!selected.length) return;
+
+    // Respect remaining capacity
+    const remaining = Math.max(0, max - existingCount - newFiles.length);
+    const toAdd = remaining ? selected.slice(0, remaining) : [];
+    if (!toAdd.length) return;
+
+    // Append to state + rebuild the input's FileList so multiple picks accumulate
+    setNewFiles((prev) => {
+      const next = [...prev, ...toAdd];
+
+      const dt = new DataTransfer();
+      next.forEach((f) => dt.items.add(f));
+      if (fileInputRef.current) fileInputRef.current.files = dt.files;
+
+      return next;
+    });
+
+    setNewPreviews((prev) => [...prev, ...toAdd.map((f) => URL.createObjectURL(f))]);
+  };
+
+  const removeNewFile = (index: number) => {
+    // Remove from newFiles and rebuild the input's FileList
+    setNewFiles((prev) => {
+      const next = prev.slice(0, index).concat(prev.slice(index + 1));
+      const dt = new DataTransfer();
+      next.forEach((f) => dt.items.add(f));
+      if (fileInputRef.current) fileInputRef.current.files = dt.files;
+      return next;
+    });
+
+    // Cleanup preview URL
+    setNewPreviews((prev) => {
+      const url = prev[index];
+      if (url) URL.revokeObjectURL(url);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Hidden input that carries deletions to the server */}
+      <input
+        type="hidden"
+        name="deleteFileIds"
+        value={JSON.stringify([...pendingDeletes])}
+        readOnly
+      />
+
+      {/* Existing images */}
+      {files.map((file, index) => {
+        const id = file._id ? String(file._id) : undefined;
+        const marked = id ? pendingDeletes.has(id) : false;
+
+        return (
+          <div
+            key={id ?? `existing-${index}`}
+            className={`flex flex-col gap-4 border p-4 rounded shadow-sm ${
+              marked ? "opacity-60 ring-2 ring-red-500" : "bg-white"
+            }`}
+          >
+            <div className="flex justify-between items-center">
+              {id ? (
+                <button
+                  type="button"
+                  onClick={() => toggleDelete(id)}
+                  className={`px-3 py-1.5 rounded text-white ${
+                    marked ? "bg-gray-600 hover:bg-gray-700" : "bg-red-600 hover:bg-red-700"
+                  }`}
                 >
-                    <div className="flex justify-between items-center">
-                        <button
-                            type="button"
-                            onClick={() => handleRemove(index)}
-                            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                        >
-                            Remove
-                        </button>
-                    </div>
-                    {file.url && (
-                        <div className="flex justify-center items-center bg-gray-50 rounded overflow-hidden max-h-[300px]">
-                            <img
-                                src={file.url}
-                                alt={`Preview ${index}`}
-                                className="h-auto max-h-[300px] w-auto max-w-full object-contain"
-                            />
-                        </div>
+                  {marked ? "Undo Delete" : "Mark for Delete"}
+                </button>
+              ) : (
+                <span className="text-xs text-gray-500">Unsaved</span>
+              )}
+            </div>
 
-                    )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <div className="text-sm">
-                            <p className="font-semibold">Type:</p>
-                            <p>{file.type}</p>
-                        </div>
-                        <div className="text-sm">
-                            <p className="font-semibold">URL:</p>
-                            <p>{file.url}</p>
-                        </div>
-                        <div className="text-sm">
-                            <p className="font-semibold">Public ID:</p>
-                            <p>{file.public_id}</p>
-                        </div>
-                        <div className="text-sm">
-                            <p className="font-semibold">Uploaded At:</p>
-                            <p>{file.uploadedAt}</p>
-                        </div>
-                    </div>
-                </div>
-            ))}
-            <label htmlFor="File" className="block rounded border border-gray-300 p-4 text-gray-900 shadow-sm sm:p-6">
-                <div className="flex items-center justify-center gap-4">
-                    <span className="font-medium"> Upload New Image </span>
+            {file.url && (
+              <div className="flex justify-center items-center bg-gray-50 rounded overflow-hidden max-h-[300px]">
+                <img
+                  src={file.url}
+                  alt={`Existing ${index}`}
+                  className="h-auto max-h-[300px] w-auto max-w-full object-contain"
+                />
+              </div>
+            )}
 
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="currentColor"
-                        className="size-6"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-7.5a2.25 2.25 0 0 0-2.25-2.25h-.75m0-3-3-3m0 0-3 3m3-3v11.25m6-2.25h.75a2.25 2.25 0 0 1 2.25 2.25v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-.75"
-                        />
-                    </svg>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+              <div>
+                <p className="font-semibold">Type:</p>
+                <p>{file.type}</p>
+              </div>
+              <div>
+                <p className="font-semibold">URL:</p>
+                <p className="break-all">{file.url}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Public ID:</p>
+                <p className="break-all">{file.public_id}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Uploaded At:</p>
+                <p>{file.uploadedAt}</p>
+              </div>
+            </div>
+          </div>
+        );
+      })}
 
-                <input multiple type="file" id="File" className="sr-only" disabled={files.length == 10 ? true : false} />
-                {files.length == 10 && <div role="alert" className="border-s-4 border-red-700 bg-red-50 p-4">
-                    <div className="flex items-center gap-2 text-red-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
-                            <path
-                                fillRule="evenodd"
-                                d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
-                                clipRule="evenodd"
-                            />
-                        </svg>
-
-                        <strong className="font-medium"> You can only have 10 images. </strong>
-                    </div>
-
-                    <p className="mt-2 text-sm text-red-700">
-                        If you would like to add more, please delete an item.
-                    </p>
-                </div>}
-            </label>
+      {/* New uploads previews (removable before submit) */}
+      {newPreviews.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {newPreviews.map((url, i) => (
+            <div key={url} className="border rounded p-3 bg-white flex flex-col gap-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">New image {i + 1}</span>
+                <button
+                  type="button"
+                  onClick={() => removeNewFile(i)}
+                  className="px-3 py-1.5 rounded bg-red-600 text-white hover:bg-red-700"
+                >
+                  Remove
+                </button>
+              </div>
+              <div className="flex justify-center items-center bg-gray-50 rounded overflow-hidden max-h-[250px]">
+                <img
+                  src={url}
+                  alt={`New ${i + 1}`}
+                  className="h-auto max-h-[250px] w-auto max-w-full object-contain"
+                />
+              </div>
+            </div>
+          ))}
         </div>
-    );
+      )}
+
+      {/* New uploads picker */}
+      <label
+        htmlFor="newImages"
+        className="block rounded border border-gray-300 p-4 text-gray-900 shadow-sm sm:p-6 cursor-pointer"
+      >
+        <div className="flex items-center justify-between gap-4">
+          <span className="font-medium">Upload New Images</span>
+          <span className="text-sm text-gray-500">
+            {totalAfterAdd}/{max}
+          </span>
+        </div>
+
+        <input
+          ref={fileInputRef}
+          key={`newImages-${resetKey}`} // helps ensure a full reset after save
+          multiple
+          accept="image/*"
+          type="file"
+          id="newImages"
+          name="newImages"
+          className="sr-only"
+          onChange={onNewFilesChange}
+          disabled={atCap}
+        />
+
+        {!atCap ? (
+          <p className="mt-2 text-sm text-gray-600">
+            Click to choose up to {Math.max(0, max - existingCount - newFiles.length)} more.
+          </p>
+        ) : (
+          <div
+            role="alert"
+            className="mt-2 border-s-4 border-red-700 bg-red-50 p-3 text-sm text-red-700"
+          >
+            <strong className="font-medium">You can only have {max} images.</strong> Delete
+            one before adding more.
+          </div>
+        )}
+      </label>
+    </div>
+  );
 }

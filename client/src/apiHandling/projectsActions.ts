@@ -1,7 +1,7 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router-dom";
 import { redirect } from "react-router-dom";
 import type { ProjectObject } from "../components/Shared/types";
-import { makeJson, fetchJson } from "./http";
+import { makeJson, fetchJson, fetchForm } from "./http";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -56,42 +56,46 @@ async function modify({ request, params }: ActionFunctionArgs) {
     const id = params.id;
 
     if (method === "PUT") {
-        const entries = Array.from(formData.entries());
-
         // 1) Scalars: use Object.fromEntries but exclude array-style keys
         const body: Record<string, any> = Object.fromEntries(
-            entries
-                .filter(
-                    ([k]) =>
-                        !k.startsWith("highlights[") &&
-                        !k.startsWith("skills[") &&
-                        !k.startsWith("images[") // if you later add images[] inputs
+            Array.from(formData.entries())
+                .filter(([k]) =>
+                    !k.startsWith("highlights[") &&
+                    !k.startsWith("skills[") &&
+                    k !== "newImages" &&
+                    k !== "deleteFileIds"
                 )
                 .map(([k, v]) => [k, v.toString()]) // preserve "" for clears
         );
 
         // 2) Arrays: trim, drop empties; still send [] to clear when user removed all
-        const toArray = (prefix: string) =>
-            entries
+        const getArray = (prefix: string) =>
+            Array.from(formData.entries())
                 .filter(([k]) => k.startsWith(prefix))
                 .map(([, v]) => v.toString().trim())
                 .filter((v) => v !== "");
 
-        body.highlights = toArray("highlights[");
-        body.skills = toArray("skills[");
+        let highlights = getArray("highlights[");
+        let skills = getArray("skills[");
 
-        // If you want “clear images” behavior for now, explicitly send []:
-        body.images = [];
+        const fd = new FormData();
 
-        const data = await fetchJson(`${apiUrl}api/projects/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-        });
+        for (const [k, v] of Object.entries(body)) fd.append(k, v);
+        fd.append("highlights", JSON.stringify(highlights));
+        fd.append("skills", JSON.stringify(skills));
 
-        if (!data) {
-            throw makeJson({ message: `Project ${id} not found` }, { status: 404, statusText: "Not found" });
+        const deleteFileIds = formData.get("deleteFileIds")?.toString() ?? "[]";
+        fd.append("deleteFileIds", deleteFileIds);
+
+        for (const file of formData.getAll("newImages")) {
+            fd.append("newImages", file as File);
         }
+
+        return fetchForm(
+            `${apiUrl}api/projects/${params.id}`,
+            fd,
+            {method: "PUT"}
+        )
 
     }
 

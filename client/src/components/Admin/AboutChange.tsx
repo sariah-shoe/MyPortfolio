@@ -119,6 +119,7 @@ export default function AboutChange() {
                 className="max-w-sm mx-auto"
                 action={`/admin/about`}
                 method="put"
+                encType="multipart/form-data"
                 ref={formRef}
                 onSubmit={() => {
                     savingRef.current = true; // suppress guard while the PUT goes out

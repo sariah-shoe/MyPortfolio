@@ -5,6 +5,7 @@ export interface FileObject {
   url: string;
   public_id: string;
   uploadedAt: string;
+  _id: string;
 }
 
 export interface AboutObject {

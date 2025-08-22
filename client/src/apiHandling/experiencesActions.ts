@@ -1,7 +1,7 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router-dom";
 import { redirect } from "react-router-dom";
 import type { ExperienceObject } from "../components/Shared/types";
-import { makeJson, fetchJson } from "./http";
+import { makeJson, fetchJson, fetchForm } from "./http";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -57,18 +57,21 @@ async function modify({ request, params }: ActionFunctionArgs) {
     const id = params.id;
 
     if (method === "PUT") {
-        // 1) Scalars: keep empty strings so fields can be cleared
-        const body: Record<string, any> = Object.fromEntries(
+        // --- 1) Build your scalars exactly like you already do ---
+        const body: Record<string, string> = Object.fromEntries(
             Array.from(formData.entries())
                 .filter(([k]) =>
+                    // exclude array-style fields + our file/delete fields
                     !k.startsWith("highlights[") &&
                     !k.startsWith("skills[") &&
-                    !k.startsWith("images[") // if you later use images[] in the form
+                    k !== "newImages" &&
+                    k !== "deleteFileIds"
                 )
+                // keep empty strings so fields can be cleared
                 .map(([k, v]) => [k, v.toString()])
         );
 
-        // 2) Arrays: trim; drop empty; and IMPORTANT: send [] if user cleared all
+        // --- 2) Build arrays the way you already do ---
         const getArray = (prefix: string) =>
             Array.from(formData.entries())
                 .filter(([k]) => k.startsWith(prefix))
@@ -78,22 +81,32 @@ async function modify({ request, params }: ActionFunctionArgs) {
         const highlights = getArray("highlights[");
         const skills = getArray("skills[");
 
-        body.highlights = highlights; // [] will clear on backend
-        body.skills = skills;         // [] will clear on backend
+        // --- 3) Create a fresh FormData and append everything ---
+        const fd = new FormData();
 
-        // If you’re not handling images yet, either omit images entirely
-        // or send [] to clear them explicitly:
-        // body.images = [];
+        // scalars (include empty strings so backend clears fields)
+        for (const [k, v] of Object.entries(body)) fd.append(k, v);
 
-        const data = await fetchJson(`${apiUrl}api/experiences/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-        });
+        // arrays: send JSON strings (simple + unambiguous for the server)
+        // IMPORTANT: still append when [], so backend can clear
+        fd.append("highlights", JSON.stringify(highlights));
+        fd.append("skills", JSON.stringify(skills));
 
-        if (!data) {
-            throw makeJson({ message: `Experience ${id} not found` }, { status: 404, statusText: "Not found" });
+        // deletions: pass through from hidden input; default to "[]"
+        const deleteFileIds = formData.get("deleteFileIds")?.toString() ?? "[]";
+        fd.append("deleteFileIds", deleteFileIds);
+
+        // files: forward everything picked in <input name="newImages" multiple>
+        for (const file of formData.getAll("newImages")) {
+            fd.append("newImages", file as File);
         }
+
+        // --- 4) Submit as multipart (do NOT set Content-Type) ---
+        return fetchForm(
+            `${apiUrl}api/experiences/${params.id}`,
+            fd,
+            { method: "PUT" }
+        );
     }
 
     if (method === "DELETE") {

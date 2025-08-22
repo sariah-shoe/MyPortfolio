@@ -1,5 +1,6 @@
 import express from 'express';
 import * as controller from './aboutMe.controller.js';
+import {uploadAbout} from "../../middleware/upload.js";
 
 let router = express.Router();
 
@@ -9,6 +10,10 @@ let router = express.Router();
 router.get('/', controller.index);
 
 // PUT method
-router.put('/', controller.update);
+router.put('/', uploadAbout.fields([
+    {name: 'headshotFile', maxCount: 1},
+    {name: 'resumeFile', maxCount:1}
+]),
+    controller.update);
 
 export {router};

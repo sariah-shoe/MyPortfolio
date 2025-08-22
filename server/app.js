@@ -6,17 +6,24 @@ import cors from 'cors';
 
 export default (port, dbUrl) => {
     mongoose.connect(`mongodb://${dbUrl}`)
-    .then(() => {
-        console.log('MongoDB connection successful, MongoDB available ');
-    })
-    .catch(err => {
-        console.error(`MongoDB connection error: ${err}`);
-        process.exit(-1);
-    });
+        .then(() => {
+            console.log('MongoDB connection successful, MongoDB available ');
+        })
+        .catch(err => {
+            console.error(`MongoDB connection error: ${err}`);
+            process.exit(-1);
+        });
     const app = express();
     app.use(cors());
     app.listen(port, () => console.log(`App started on port ${port}`))
     app.use(bodyParser.json());
+    app.use((err, _req, res, _next) => {
+        if (err?.name === 'MulterError' || /Invalid file type/i.test(err?.message)) {
+            return res.status(400).json({ error: err.message });
+        }
+        return res.status(500).json({ error: 'Unexpected server error' });
+    });
+
     registerRoutes(app);
     return app;
 }
