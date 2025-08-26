@@ -3,6 +3,8 @@ import registerRoutes from "./routes.js";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import cors from 'cors';
+import helmet from "helmet";
+import cookieParser from "cookie-parser";
 
 export default (port, dbUrl) => {
     mongoose.connect(`mongodb://${dbUrl}`)
@@ -14,7 +16,13 @@ export default (port, dbUrl) => {
             process.exit(-1);
         });
     const app = express();
-    app.use(cors());
+    app.use(helmet());
+    app.use(express.json());
+    app.use(cookieParser())
+    app.use(cors({
+        origin: ["http://localhost:5173"],
+        credentials: true,
+    }));
     app.listen(port, () => console.log(`App started on port ${port}`))
     app.use(bodyParser.json());
     app.use((err, _req, res, _next) => {
