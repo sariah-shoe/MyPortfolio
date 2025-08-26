@@ -14,6 +14,16 @@ export default function AboutChange() {
     const [wasSubmitting, setWasSubmitting] = useState(false);
     const [resetCounter, setResetCounter] = useState(0);
 
+    const [headshot, setHeadshot] = useState(aboutMeData.headshot?.url);
+    const [resume, setResume] = useState(aboutMeData.resume?.url);
+
+    const headshotInputRef = useRef<HTMLInputElement>(null);
+    const resumeInputRef = useRef<HTMLInputElement>(null);
+
+    const headshotPreviewRef = useRef<string | null>(null);
+    const resumePreviewRef = useRef<string | null>(null);
+
+
     // ---- form-level dirty tracking
     // Memoize baseline off loader data
     const baseline = useMemo(() => ({
@@ -57,8 +67,53 @@ export default function AboutChange() {
             setWasSubmitting(false);
             savingRef.current = false; // allow guard again
             setResetCounter(c => c + 1);
+            
+            // Clear inputs
+            if (headshotInputRef.current) headshotInputRef.current.value = "";
+            if (resumeInputRef.current) resumeInputRef.current.value = "";
+
+            // Clear previews
+            if (headshotPreviewRef.current){
+                URL.revokeObjectURL(headshotPreviewRef.current);
+                headshotPreviewRef.current = null;
+            }
+
+            if (resumePreviewRef.current){
+                URL.revokeObjectURL(resumePreviewRef.current);
+                resumePreviewRef.current = null;
+            }
+
+            // Re-seed from server data
+            setHeadshot(aboutMeData.headshot?.url);
+            setResume(aboutMeData.resume?.url);
         }
-    }, [navigation.state, wasSubmitting]);
+    }, [navigation.state, wasSubmitting, aboutMeData]);
+
+    const onHeadshotChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+        const f = e.currentTarget.files?.[0];
+        if (!f || f.size === 0) return;
+
+        // Revoke previous blob preview
+        if (headshotPreviewRef.current) URL.revokeObjectURL(headshotPreviewRef.current);
+        
+        // Set new preview
+        const url = URL.createObjectURL(f);
+        headshotPreviewRef.current = url;
+        setHeadshot(url);
+        childDirty(true);
+    }
+
+    const onResumeChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+        const f = e.currentTarget.files?.[0];
+        if (!f || f.size === 0) return;
+
+        if(resumePreviewRef.current) URL.revokeObjectURL(resumePreviewRef.current);
+
+        const url = URL.createObjectURL(f);
+        resumePreviewRef.current = url;
+        setResume(url);
+        childDirty(true);
+    }
 
     return (
         <div>
@@ -157,29 +212,30 @@ export default function AboutChange() {
                 </div>
 
                 <div className="mb-5">
-                    {aboutMeData.headshot?.url ? (<img src={aboutMeData.headshot.url} alt="Headshot of Sariah Shoemaker" />) : <div className="h-32 w-32 bg-gray-100 rounded-md grid place-items-center text-sm text-gray-500">
+                    {headshot ? (<img src={headshot} alt="Headshot of Sariah Shoemaker" />) : <div className="h-32 w-32 bg-gray-100 rounded-md grid place-items-center text-sm text-gray-500">
                         No headshot
                     </div>}
-                    <label htmlFor="HeadshotFile" className="block rounded border border-gray-300 p-4 text-gray-900 shadow-sm sm:p-6">
+                    <label htmlFor="headshotFile" className="block rounded border border-gray-300 p-4 text-gray-900 shadow-sm sm:p-6">
                         <div className="flex items-center justify-center gap-4">
                             <span className="font-medium">Upload New Headshot</span>
                             {/* …icon… */}
                         </div>
                         <input
-                            multiple
+                            ref={headshotInputRef}
                             type="file"
-                            id="HeadshotFile"
-                            name="headshot"
+                            id="headshotFile"
+                            name="headshotFile"
                             className="sr-only"
-                            onChange={() => childDirty(true)}
+                            accept="image/*"
+                            onChange={onHeadshotChange}
                         />
                     </label>
                 </div>
 
                 <div className="mb-5">
-                    {aboutMeData.resume?.url ?
+                    {resume ?
                         (<iframe
-                            src={aboutMeData.resume.url}
+                            src={resume}
                             width="100%"
                             height="600px"
                             loading="lazy"
@@ -189,18 +245,19 @@ export default function AboutChange() {
                             No resume uploaded
                         </div>
                     }
-                    <label htmlFor="ResumeFile" className="block rounded border border-gray-300 p-4 text-gray-900 shadow-sm sm:p-6">
+                    <label htmlFor="resumeFile" className="block rounded border border-gray-300 p-4 text-gray-900 shadow-sm sm:p-6">
                         <div className="flex items-center justify-center gap-4">
                             <span className="font-medium">Upload New Resume</span>
                             {/* …icon… */}
                         </div>
                         <input
-                            multiple
+                            ref={resumeInputRef}
                             type="file"
-                            id="ResumeFile"
-                            name="resume"
+                            id="resumeFile"
+                            name="resumeFile"
                             className="sr-only"
-                            onChange={() => childDirty(true)}
+                            accept=".pdf"
+                            onChange={onResumeChange}
                         />
                     </label>
                 </div>
