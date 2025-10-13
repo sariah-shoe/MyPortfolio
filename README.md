@@ -9,5 +9,6 @@ Includes
 
 In progress
   - Authorization for the admin pages
+  - Contact me form functional
   - Connecting to Mongo Atlas instead of local Mongodb
   - Deployment
