@@ -39,3 +39,9 @@ export interface ProjectObject {
   extra: string;
   _id: string;
 }
+
+// Interface to help with managing admin log in/out
+export type AuthContextType = {
+  auth: boolean;
+  setAuth: React.Dispatch<React.SetStateAction<boolean>>;
+};

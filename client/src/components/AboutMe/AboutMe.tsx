@@ -8,11 +8,11 @@ export default function AboutMe() {
         <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:items-center md:gap-8">
                 <div className="md:col-span-3">
-                    <img
+                    {aboutMeData.headshot ? <img
                         src={aboutMeData.headshot.url}
                         className="rounded"
                         alt=""
-                    />
+                    /> : "No Image Found"}
                 </div>
 
                 <div className="md:col-span-1">
@@ -22,7 +22,7 @@ export default function AboutMe() {
                         </h2>
 
                         <p className="mt-4 text-gray-700">
-                            {aboutMeData.blurb}
+                            {aboutMeData.blurb ? aboutMeData.blurb : "No Blurb Found"}
                         </p>
                     </div>
                 </div>

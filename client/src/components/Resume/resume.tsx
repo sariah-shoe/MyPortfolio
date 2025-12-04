@@ -1,5 +1,3 @@
-import Header from '../HeaderFooter/header';
-import Footer from '../HeaderFooter/footer';
 import type { AboutObject } from '../Shared/types';
 import { useLoaderData } from 'react-router-dom';
 
@@ -16,6 +14,8 @@ export default function Resume() {
                             </h2>
                         </div>
 
+                        {
+                        aboutMeData.resume ?
                         <iframe
                             src={aboutMeData.resume.url}
                             width="100%"
@@ -24,6 +24,8 @@ export default function Resume() {
                             title="PDF-file"
                         >
                         </iframe>
+                        : "No Resume Found"
+        }
                     </div>
                 </div>
             </section>

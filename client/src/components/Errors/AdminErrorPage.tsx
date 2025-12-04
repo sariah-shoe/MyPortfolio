@@ -1,10 +1,15 @@
 // src/components/Errors/AdminErrorPage.tsx
 import { isRouteErrorResponse, Link, useRouteError } from "react-router-dom";
+import { useAuth } from "../Shared/AuthContext";
 
 export default function AdminErrorPage() {
   const error = useRouteError();
+  const { setAuth } = useAuth();
 
   if (isRouteErrorResponse(error)) {
+    if(error.status == 401){
+      setAuth(false);
+    }
     return (
       <main className="mx-auto max-w-2xl p-8">
         <h1 className="text-2xl font-bold">Request failed</h1>
