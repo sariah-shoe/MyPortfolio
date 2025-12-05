@@ -44,6 +44,7 @@ async function create() {
             images: [],
             extra: ""
         }),
+        credentials: "include",
     });
 
     return redirect("/admin/projects");
@@ -100,7 +101,7 @@ async function modify({ request, params }: ActionFunctionArgs) {
     }
 
     if (method === "DELETE") {
-        await fetchJson(`${apiUrl}api/projects/${id}`, {method: "DELETE",});
+        await fetchJson(`${apiUrl}api/projects/${id}`, {method: "DELETE", credentials: "include"});
     }
 
     return redirect(`/admin/projects`);

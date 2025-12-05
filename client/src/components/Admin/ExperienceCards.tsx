@@ -4,6 +4,7 @@ import ExperienceChange from "./ExperienceChange";
 import type { ExperienceObject } from "../Shared/types";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useUnsavedChangesGuard } from "../../hooks/useUnsavedChangesGuard";
+import { useAuth } from "../Shared/AuthContext";
 
 export default function ExperienceCards() {
     const { allExperiences } = useLoaderData() as { allExperiences: ExperienceObject[] }
@@ -18,6 +19,8 @@ export default function ExperienceCards() {
     const guardBypassRef = useRef(false); // bypass guard for our own redirect
     const [resetCounter, setResetCounter] = useState(0);
     const lastSavedIdRef = useRef<string | null>(null);
+
+    const { auth } = useAuth();
 
     useEffect(() => {
         if (navigation.state === "submitting" && navigation.formMethod?.toLowerCase() === "put") {
@@ -157,7 +160,8 @@ export default function ExperienceCards() {
                 >
                     <button
                         type="submit"
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-700"
+                        disabled={!auth}
                     >
                         Add Experience
                     </button>

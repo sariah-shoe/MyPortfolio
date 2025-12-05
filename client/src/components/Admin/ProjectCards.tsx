@@ -3,6 +3,7 @@ import ProjectChange from "./ProjectChange";
 import type { ProjectObject } from "../Shared/types";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useUnsavedChangesGuard } from "../../hooks/useUnsavedChangesGuard";
+import { useAuth } from "../Shared/AuthContext";
 
 export default function ProjectCards() {
     const { allProjects } = useLoaderData() as { allProjects: ProjectObject[] }
@@ -17,6 +18,7 @@ export default function ProjectCards() {
     const guardBypassRef = useRef(false); // bypass guard for our own redirect
     const [resetCounter, setReseetCounter] = useState(0);
     const lastSavedIdRef = useRef<string | null>(null);
+    const { auth } = useAuth();
 
     useEffect(() => {
         if (navigation.state === "submitting" && navigation.formMethod?.toLowerCase() === "put") {
@@ -148,7 +150,8 @@ export default function ProjectCards() {
                 >
                     <button
                         type="submit"
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-700"
+                        disabled={!auth}
                     >
                         Add Project
                     </button>

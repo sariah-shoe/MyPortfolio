@@ -44,7 +44,8 @@ async function create() {
             skills: [],
             images: [],
             extra: ""
-        })
+        },),
+        credentials: "include",
     })
 
     return redirect("/admin/experiences");
@@ -110,7 +111,7 @@ async function modify({ request, params }: ActionFunctionArgs) {
     }
 
     if (method === "DELETE") {
-        await fetchJson(`${apiUrl}api/experiences/${id}`, { method: "DELETE" });
+        await fetchJson(`${apiUrl}api/experiences/${id}`, { method: "DELETE", credentials: "include" });
     }
 
     return redirect(`/admin/experiences`);

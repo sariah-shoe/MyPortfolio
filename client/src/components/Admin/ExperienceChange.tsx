@@ -5,6 +5,7 @@ import { useFormDirtyState } from "../../hooks/useFormDirtyState.ts";
 import { Form, useNavigation } from "react-router-dom";
 import FileListEditor from "./FileListEditor.tsx";
 import { useMemo } from "react";
+import { useAuth } from "../Shared/AuthContext";
 
 interface ExperienceProps {
   experience: ExperienceObject;
@@ -21,6 +22,8 @@ export default function ExperienceChange({
   onDangerousSubmit,
   resetKey,
 }: ExperienceProps) {
+  const { auth } = useAuth();
+
   const baseline = useMemo(
     () => ({
       position: experience.position ?? "",
@@ -101,8 +104,8 @@ export default function ExperienceChange({
       >
         <button
           type="submit"
-          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-60"
-          disabled={isBusy}
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-700"
+          disabled={isBusy || !auth}
         >
           Delete experience
         </button>
@@ -249,7 +252,8 @@ export default function ExperienceChange({
 
           <button
             type="submit"
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-60"
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-700"
+            disabled={!auth}
           >
             Save
           </button>

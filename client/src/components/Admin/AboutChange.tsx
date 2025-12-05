@@ -4,6 +4,7 @@ import type { AboutObject } from "../Shared/types";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useFormDirtyState } from "../../hooks/useFormDirtyState";
 import { useUnsavedChangesGuard } from "../../hooks/useUnsavedChangesGuard";
+import { useAuth } from "../Shared/AuthContext";
 
 export default function AboutChange() {
     const { aboutMeData } = useLoaderData() as { aboutMeData: AboutObject };
@@ -22,6 +23,8 @@ export default function AboutChange() {
 
     const headshotPreviewRef = useRef<string | null>(null);
     const resumePreviewRef = useRef<string | null>(null);
+
+    const { auth } = useAuth();
 
 
     // ---- form-level dirty tracking
@@ -265,7 +268,8 @@ export default function AboutChange() {
                 <div className="mb-5">
                     <button
                         type="submit"
-                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-700"
+                        disabled={!auth}
                     >
                         Save
                     </button>

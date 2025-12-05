@@ -4,6 +4,7 @@ import { Form, useNavigation } from "react-router-dom";
 import FileListEditor from "./FileListEditor.tsx";
 import { useFormDirtyState } from "../../hooks/useFormDirtyState.ts";
 import { useMemo } from "react";
+import { useAuth } from "../Shared/AuthContext.tsx";
 
 interface ProjectProps {
   project: ProjectObject;
@@ -20,6 +21,8 @@ export default function ProjectChange({
   onDangerousSubmit,
   resetKey,
 }: ProjectProps) {
+  const { auth } = useAuth();
+
   const baseline = useMemo(
     () => ({
       name: project.name ?? "",
@@ -102,8 +105,8 @@ export default function ProjectChange({
       >
         <button
           type="submit"
-          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-60"
-          disabled={isBusy}
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-700"
+          disabled={isBusy || !auth}
         >
           Delete project
         </button>
@@ -218,7 +221,8 @@ export default function ProjectChange({
 
           <button
             type="submit"
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-60"
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-700"
+            disabled={!auth}
           >
             Save
           </button>
