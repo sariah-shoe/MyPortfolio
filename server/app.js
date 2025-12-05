@@ -7,7 +7,7 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 
 export default (port, dbUrl) => {
-    mongoose.connect(`mongodb://${dbUrl}`)
+    mongoose.connect(dbUrl)
         .then(() => {
             console.log('MongoDB connection successful, MongoDB available ');
         })
