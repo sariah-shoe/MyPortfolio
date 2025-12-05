@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 
+// Props needed for a list
 interface ListProps {
   name: string;
   initialItems: string[];
   onDirty?: (isDirty: boolean) => void;
 }
 
+// Editable list of items
 export default function List({ name, initialItems, onDirty }: ListProps) {
   // Local, stateful list
   const [items, setItems] = useState(
@@ -15,14 +17,14 @@ export default function List({ name, initialItems, onDirty }: ListProps) {
   // Local dirty flag; only flips true on edit, resets when initialItems change
   const [isDirty, setIsDirty] = useState(false);
 
-  // List.tsx
+  // Normalize my list
   const norm = (arr: string[]) =>
     arr.map((s) => (s ?? "").trim()).filter(s => s !== "");
-
 
   // Precompute normalized baselines so comparisons are cheap & stable
   const baseline = useMemo(() => norm(initialItems), [initialItems]);
 
+  // Handle item changes
   const handleItemChange = (index: number, value: string) => {
     setItems((prev) => {
       const updated = [...prev];
@@ -31,14 +33,18 @@ export default function List({ name, initialItems, onDirty }: ListProps) {
     });
   };
 
+  // Add item
   const addItem = () => setItems((prev) => [...prev, ""]);
+
+  // Remove item
   const removeItem = (index: number) =>
     setItems((prev) => prev.filter((_, i) => i !== index));
 
-  // --- DIRTY: flip to true on any divergence from baseline (user edits) ---
+  // Flip dirty to true on any divergence from baseline
   useEffect(() => {
     if (isDirty) return; // already dirty; don't evaluate further
 
+    // Compare to baseline
     const current = norm(items);
     const arraysEqual =
       current.length === baseline.length &&
@@ -50,7 +56,7 @@ export default function List({ name, initialItems, onDirty }: ListProps) {
     }
   }, [items, baseline, isDirty, onDirty]);
 
-  // --- RESET: when canonical data reloads (after save), sync & clear dirty ---
+  // Reset when canonical data reloads (after save), sync & clear dirty
   useEffect(() => {
     // sync UI to latest server data
     setItems(initialItems.length > 0 ? initialItems : [""]);
@@ -59,20 +65,20 @@ export default function List({ name, initialItems, onDirty }: ListProps) {
       setIsDirty(false);
       onDirty?.(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialItems]); // deliberately only on initialItems change
+  }, [initialItems]);
 
+  // List component
   return (
     <div className="space-y-4 mt-2">
+      {/* Map all my items */}
       {items.map((item, index) => (
         <div
           key={index}
           className="flex flex-col md:flex-row md:items-start gap-2 border border-gray-200 p-3 rounded"
         >
           <div className="flex-1">
+            {/* Item text */}
             <textarea
-              // Use the SAME name for all items so FormData.getAll works.
-              // Choose either `${name}[]` convention or just `name`.
               name={`${name}[]`}
               defaultValue={item}
               onChange={(e) => handleItemChange(index, e.target.value)}
@@ -80,6 +86,7 @@ export default function List({ name, initialItems, onDirty }: ListProps) {
               placeholder={`Enter ${name}...`}
             />
           </div>
+          {/* Delete item */}
           <button
             type="button"
             onClick={() => removeItem(index)}
@@ -90,6 +97,7 @@ export default function List({ name, initialItems, onDirty }: ListProps) {
         </div>
       ))}
 
+      {/* Button to add items to list */}
       <button
         type="button"
         onClick={addItem}
@@ -99,6 +107,7 @@ export default function List({ name, initialItems, onDirty }: ListProps) {
         Add {name.slice(0, 1).toUpperCase() + name.slice(1)}
       </button>
 
+      {/* Limit number of list items to 10 */}
       {items.length >= 10 && (
         <div role="alert" className="border-s-4 border-red-700 bg-red-50 p-4">
           <div className="flex items-center gap-2 text-red-700">

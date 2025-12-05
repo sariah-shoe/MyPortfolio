@@ -13,7 +13,7 @@ export default function Footer() {
 
                         {/* Short blurb */}
                         <p className="mt-4 max-w-xs text-gray-500">
-                            A developer dedicated to quality products or some catchphrase or something.
+                            Building reliable web solutions, one line of code at a time.
                         </p>
 
                         {/* List of my social media */}

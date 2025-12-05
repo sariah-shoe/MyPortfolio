@@ -1,5 +1,3 @@
-// src/apiHandling/http.ts
-
 // Helper function to parse and return the response
 export function makeJson(
   data: unknown,
@@ -14,13 +12,15 @@ export function makeJson(
   });
 }
 
+// Function to fetch using json
 export async function fetchJson(input: RequestInfo, init?: RequestInit) {
+  // Response variable
   let res: Response;
 
-  // Network errors -> throw a Response so errorElement can render nicely
+  // Try to fetch using the information passed
   try {
     res = await fetch(input, init);
-  } catch {
+  } catch { // Throw an error if it occurs
     throw new Response(JSON.stringify({ message: "Network error. Please try again later." }), {
       status: 503,
       statusText: "Service Unavailable",
@@ -28,7 +28,7 @@ export async function fetchJson(input: RequestInfo, init?: RequestInit) {
     });
   }
 
-  // Non-2xx -> try to surface server JSON; otherwise use status text
+  // If response isn't okay, get the error and throw it
   if (!res.ok) {
     let data: any = null;
     try { data = await res.json(); } catch { }
@@ -49,6 +49,7 @@ export async function fetchJson(input: RequestInfo, init?: RequestInit) {
   const text = await res.text();
   if (!text) return null;
 
+  // Parse and return the text
   try {
     return JSON.parse(text);
   } catch {
@@ -56,24 +57,20 @@ export async function fetchJson(input: RequestInfo, init?: RequestInit) {
   }
 }
 
-/**
- * Submit multipart/form-data (e.g., images/PDFs).
- * - Do NOT set Content-Type; the browser sets the boundary.
- * - Same error behavior as fetchJson so your errorElement keeps working.
- */
+// Submit multipart/form-data
 export async function fetchForm(input: RequestInfo, formData: FormData, init?: RequestInit) {
+  // Response variable
   let res: Response;
 
+  // Try to fetch using the information passed
   try {
     res = await fetch(input, {
       ...init,
-      // default to POST unless caller overrides (e.g., PUT)
-      method: init?.method ?? "POST",
+      method: init?.method ?? "POST", // Default is post but can be overridden
       body: formData,
-      credentials: "include",
-      // IMPORTANT: do NOT add headers["Content-Type"] here
+      credentials: "include", // All forms will need credentials
     });
-  } catch {
+  } catch { // Catch network errors
     throw new Response(JSON.stringify({ message: "Network error. Please try again later." }), {
       status: 503,
       statusText: "Service Unavailable",
@@ -81,6 +78,7 @@ export async function fetchForm(input: RequestInfo, formData: FormData, init?: R
     });
   }
 
+  // If response isn't okay, get error and throw it
   if (!res.ok) {
     let data: any = null;
     try { data = await res.json(); } catch { }
@@ -94,11 +92,14 @@ export async function fetchForm(input: RequestInfo, formData: FormData, init?: R
     });
   }
 
+  // Success paths with no body
   if (res.status === 204 || res.status === 205 || init?.method === "HEAD") return null;
 
+  // Safely read body and parse only if present
   const text = await res.text();
   if (!text) return null;
 
+  // Parse and return the text
   try {
     return JSON.parse(text);
   } catch {
@@ -106,10 +107,13 @@ export async function fetchForm(input: RequestInfo, formData: FormData, init?: R
   }
 }
 
+// Submit a login request (NOTE: May deprecate later and just use fetch instead)
 export async function loginRequest(input: RequestInfo, email: string, password: string) {
+  //
   let res: Response;
   let body = JSON.stringify({ email, password })
 
+  // Try to fetch using information passed
   try {
     res = await fetch(input, {
       method: "POST",
@@ -125,6 +129,7 @@ export async function loginRequest(input: RequestInfo, email: string, password: 
     });
   }
 
+  // If response isn't ok, get an error and throw it
   if (!res.ok) {
     let data: any = null;
     try { data = await res.json(); } catch { }

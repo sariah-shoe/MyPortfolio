@@ -1,8 +1,11 @@
 import CustomCarousel from '../Shared/CustomCarousel';
 import type { ExperienceObject } from '../Shared/types';
 import { useLoaderData } from 'react-router-dom';
+import { formatExperienceRange } from '../Shared/dateUtils';
 
+// Component for a single experience
 export default function ExperiencePage() {
+    // Load experience data
     const { experience } = useLoaderData() as { experience: ExperienceObject}
     return (
         <div>
@@ -15,7 +18,7 @@ export default function ExperiencePage() {
                                 {experience.position} at {experience.company}
                             </h2>
 
-                            <h3 className="mt-1 text-base text-gray-700 sm:text-lg">{experience.startDate} {experience.typeEx === "Personal" ? "" : experience.endDate !== "" ? ` to ${experience.endDate}` : " to present"}</h3>
+                            <h3 className="mt-1 text-base text-gray-700 sm:text-lg">{formatExperienceRange(experience.startDate, experience.endDate)}</h3>
 
                             <p className="mt-4 text-sm text-gray-600 sm:text-base">
                                 {experience.extra}

@@ -5,32 +5,47 @@ import { makeJson, fetchJson, fetchForm } from "./http";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
+// Load all experiences
 async function load_all() {
+    // Fetch data
     const data = await fetchJson(`${apiUrl}api/experiences`);
+
+    // Throw an error if nothing is returned
     if (!data) {
         throw makeJson({ message: "Experiences not found" }, { status: 404, statusText: "Not found" });
     }
+
+    // Map the data to the format I want, including making the dates more friendly
     const formatted = data.experiences.map((exp: ExperienceObject) => ({
         ...exp,
         startDate: exp.startDate?.slice(0, 10),
         endDate: exp.endDate ? exp.endDate.slice(0, 10) : "",
     }));
 
+    // Return formatted experiences
     return { allExperiences: formatted };
 }
 
+// Load one experience
 async function load_one({ params }: LoaderFunctionArgs) {
+    // Fetch data
     const data = await fetchJson(`${apiUrl}api/experiences/${params.id}`)
+
+    // Throw error if nothing is returned
     if (!data) {
         throw makeJson({ message: `Experience ${params.id} not found` }, { status: 404, statusText: "Not found" });
     }
+
+    // Return experience
     return { experience: data };
 }
 
 // Create a new empty experience
 async function create() {
+    // Set date to today
     const today = new Date().toISOString().slice(0, 10);
 
+    // Create an empty experience with the defaults in body
     await fetchJson(`${apiUrl}api/experiences`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -48,31 +63,32 @@ async function create() {
         credentials: "include",
     })
 
+    // Redirect to experiences when done
     return redirect("/admin/experiences");
 }
 
 // PUT and DELETE are combined so that there is one action for my /admin/experiences/:id
 async function modify({ request, params }: ActionFunctionArgs) {
+    // Get the form data, method, and id
     const formData = await request.formData();
     const method = request.method.toUpperCase();
     const id = params.id;
 
     if (method === "PUT") {
-        // --- 1) Build your scalars exactly like you already do ---
+        // Build scalars
         const body: Record<string, string> = Object.fromEntries(
             Array.from(formData.entries())
                 .filter(([k]) =>
-                    // exclude array-style fields + our file/delete fields
+                    // exclude array-style fields + file/delete fields
                     !k.startsWith("highlights[") &&
                     !k.startsWith("skills[") &&
                     k !== "newImages" &&
                     k !== "deleteFileIds"
                 )
-                // keep empty strings so fields can be cleared
                 .map(([k, v]) => [k, v.toString()])
         );
 
-        // --- 2) Build arrays the way you already do ---
+        // Build cleaned arrays
         const getArray = (prefix: string) =>
             Array.from(formData.entries())
                 .filter(([k]) => k.startsWith(prefix))
@@ -82,14 +98,13 @@ async function modify({ request, params }: ActionFunctionArgs) {
         const highlights = getArray("highlights[");
         const skills = getArray("skills[");
 
-        // --- 3) Create a fresh FormData and append everything ---
+        // Create a fresh FormData and append everything
         const fd = new FormData();
 
-        // scalars (include empty strings so backend clears fields)
+        // scalars
         for (const [k, v] of Object.entries(body)) fd.append(k, v);
 
-        // arrays: send JSON strings (simple + unambiguous for the server)
-        // IMPORTANT: still append when [], so backend can clear
+        // arrays
         fd.append("highlights", JSON.stringify(highlights));
         fd.append("skills", JSON.stringify(skills));
 
@@ -102,7 +117,7 @@ async function modify({ request, params }: ActionFunctionArgs) {
             fd.append("newImages", file as File);
         }
 
-        // --- 4) Submit as multipart (do NOT set Content-Type) ---
+        // Submit as multipart
         return fetchForm(
             `${apiUrl}api/experiences/${params.id}`,
             fd,
@@ -110,10 +125,13 @@ async function modify({ request, params }: ActionFunctionArgs) {
         );
     }
 
+    // Delete an experience
     if (method === "DELETE") {
+        // Use fetch to try and delete
         await fetchJson(`${apiUrl}api/experiences/${id}`, { method: "DELETE", credentials: "include" });
     }
 
+    // Redirect back to experiences
     return redirect(`/admin/experiences`);
 }
 

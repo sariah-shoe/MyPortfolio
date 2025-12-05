@@ -4,9 +4,13 @@ import Filter from '../Shared/Filter';
 import type { ExperienceObject } from '../Shared/types';
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link, useLoaderData } from 'react-router-dom';
+import { formatExperienceRange } from '../Shared/dateUtils';
 
+// Component shows all experiences
 export default function Experiences() {
+    // Load in my experiences
     const { allExperiences } = useLoaderData() as { allExperiences: ExperienceObject[] }
+
     // This creates my array of skills for filters by looping through my experiences and grabbing unique skills
     // I split this into professional and personal so that I can filter accordingly
     let profSkills: string[] = []
@@ -133,7 +137,6 @@ export default function Experiences() {
                                         className="rounded-lg border border-gray-100 bg-white p-4 shadow-xs transition hover:shadow-lg sm:p-6"
                                     >
                                         <span className="inline-block rounded-sm bg-blue-600 p-2 text-white">
-                                            {/* SVG from here https://flowbite.com/icons */}
                                             {/* Professional experiences: Briefcase, Educational experiences: graduation cap, Personal experiences: Heart */}
                                             {experience.typeEx === "Professional" ? (
                                                 <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
@@ -162,8 +165,7 @@ export default function Experiences() {
                                         <div>
                                             <h2>{experience.company}</h2>
                                             <h2>
-                                                {experience.startDate}
-                                                {proff ? "" : experience.endDate !== "" ? ` to ${experience.endDate}` : " to present"}
+                                                {formatExperienceRange(experience.startDate, experience.endDate)}
                                             </h2>
                                         </div>
 

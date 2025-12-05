@@ -15,6 +15,8 @@ interface ExperienceProps {
   onDirtyChange?: (id: string, isDirty: boolean) => void;
 }
 
+// Change one experience card
+
 export default function ExperienceChange({
   experience,
   onSubmitStart,
@@ -22,8 +24,10 @@ export default function ExperienceChange({
   onDangerousSubmit,
   resetKey,
 }: ExperienceProps) {
+  // Use auth
   const { auth } = useAuth();
 
+  // Baseline so we know if the card has changed
   const baseline = useMemo(
     () => ({
       position: experience.position ?? "",
@@ -41,24 +45,30 @@ export default function ExperienceChange({
     ],
   );
 
+  // Use my useFormDirtyState so we can keep track of changes
   const { formRef, isDirty, childDirty } = useFormDirtyState({
     baseline,
     resetKey,
     onDirtyChange: (dirty) => onDirtyChange?.(experience._id, dirty),
   });
 
-  // --- loading overlay state (only for this card) ---
+  // Use navigation so I can deal with form submissions
   const navigation = useNavigation();
+
+  // Set target action and method
   const targetAction = `/admin/experiences/${experience._id}`;
+  const method = navigation.formMethod?.toLowerCase();
+
+  // Track if a card is submitted, saving, deleting, or busy
   const isThisCardSubmitting =
     navigation.state === "submitting" &&
     (navigation.formAction?.endsWith(targetAction) ?? false);
 
-  const method = navigation.formMethod?.toLowerCase();
   const isSaving = isThisCardSubmitting && method === "put";
   const isDeleting = isThisCardSubmitting && method === "delete";
   const isBusy = isSaving || isDeleting;
 
+  // Overlay message for when saving an experience
   const overlayMessage = isDeleting ? "Deleting experience…" : "Saving experience…";
 
   return (
@@ -71,7 +81,7 @@ export default function ExperienceChange({
         <div className="absolute inset-0 z-20 bg-white/70 backdrop-blur-sm pointer-events-none" />
       )}
 
-      {/* Sticky status banner (visible regardless of scroll) */}
+      {/* Sticky status banner */}
       {isBusy && (
         <div
           className="fixed left-1/2 top-4 z-50 -translate-x-1/2"
@@ -146,6 +156,7 @@ export default function ExperienceChange({
             </div>
           )}
 
+          {/* Radio buttons for experience type */}
           <div className="flex gap-4">
             <fieldset className="mb-4">
               <legend className="text-sm font-medium text-gray-700">Experience Type</legend>
@@ -184,6 +195,7 @@ export default function ExperienceChange({
             </fieldset>
           </div>
 
+          {/* Input for position, company, and dates */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
               className="p-2 border border-gray-300 rounded"
@@ -217,6 +229,7 @@ export default function ExperienceChange({
             />
           </div>
 
+          {/* List of highlights */}
           <div className="mt-2">
             <label className="font-semibold">Highlights:</label>
             <List
@@ -226,6 +239,7 @@ export default function ExperienceChange({
             />
           </div>
 
+          {/* List of skills */}
           <div className="mt-2">
             <label className="font-semibold">Skills:</label>
             <List
@@ -235,11 +249,13 @@ export default function ExperienceChange({
             />
           </div>
 
+          {/* FileList of images */}
           <div className="mt-2">
             <label className="font-semibold">Images:</label>
             <FileListEditor initialFiles={experience.images} resetKey={resetKey} />
           </div>
 
+          {/* Input for extra info */}
           <div className="mt-2">
             <label className="font-semibold">Extra:</label>
             <textarea
@@ -250,6 +266,7 @@ export default function ExperienceChange({
             />
           </div>
 
+          {/* Submit button */}
           <button
             type="submit"
             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-700"

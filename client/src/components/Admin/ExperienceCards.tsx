@@ -6,49 +6,76 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useUnsavedChangesGuard } from "../../hooks/useUnsavedChangesGuard";
 import { useAuth } from "../Shared/AuthContext";
 
+// Holds all my experiences
+
 export default function ExperienceCards() {
+    // Load data
     const { allExperiences } = useLoaderData() as { allExperiences: ExperienceObject[] }
+
+    // Navigation to help with unsaved change guard, toast, and form submission
     const navigation = useNavigation();
     const navigate = useNavigate();
+
+    // Toast state, showing or not
     const [showToast, setShowToast] = useState(false);
+
+    // State to keep track of submissions
     const [wasSubmitting, setWasSubmitting] = useState(false);
+
+    // Keeps track of last edited so that we can display which experience was saved
     const [lastEdited, setLastEdited] = useState<string | null>(null);
     const lastEditedRef = useRef<string | null>(null);
+
+    // Keeps track of dirty experiences
     const [dirtyExperiences, setDirtyExperiences] = useState<Record<string, boolean>>({});
+
+    // Refs to help suppress guard during PUT saves and for our own redirect
     const savingRef = useRef(false);
-    const guardBypassRef = useRef(false); // bypass guard for our own redirect
+    const guardBypassRef = useRef(false);
+
+     // Reset counter for dirty tracking
     const [resetCounter, setResetCounter] = useState(0);
     const lastSavedIdRef = useRef<string | null>(null);
 
+    // Use Auth
     const { auth } = useAuth();
 
+    // Effect to handle my wasSubmitting state for toast
     useEffect(() => {
         if (navigation.state === "submitting" && navigation.formMethod?.toLowerCase() === "put") {
             setWasSubmitting(true);
         }
     }, [navigation.state, navigation.formMethod]);
 
+    // Behavior after a save
     useEffect(() => {
         if (wasSubmitting && navigation.state === "idle") {
+            // Make clean
             setResetCounter((c) => c + 1);
-            setLastEdited(lastEditedRef.current); // manually set lastEdited state
+
+            // Set the last edited ref for popups
+            setLastEdited(lastEditedRef.current);
+
+            // Show the toast and set timeout for it
             setShowToast(true);
             setTimeout(() => setShowToast(false), 3000);
+
+            // Reset was submitting and savingref
             setWasSubmitting(false);
             savingRef.current = false;
         }
     }, [navigation.state, wasSubmitting]);
 
+    // If there's a change to a cards dirty/clean status, pass it on to the children
     const handleDirtyChange = useCallback((id: string, isDirty: boolean) => {
-        // Defer to the microtask queue to avoid "update during render" warning
-        // Use queueMicrotask if available, else Promise microtask fallback
         const run = () => {
+            // Change dirty experiences state to match
             setDirtyExperiences(prev => {
-                // avoid needless updates
                 if (prev[id] === isDirty) return prev;
                 return { ...prev, [id]: isDirty };
             });
         };
+        // Run the changes as a microtask or as a promise
         if (typeof queueMicrotask === "function") {
             queueMicrotask(run);
         } else {
@@ -56,12 +83,15 @@ export default function ExperienceCards() {
         }
     }, []);
 
-    // Names to show in the prompt
+    // Ids of currently dirty experiences
     const dirtyIds = useMemo(
         () => Object.entries(dirtyExperiences).filter(([, v]) => v).map(([id]) => id),
         [dirtyExperiences]
     );
+
+    // Names of currently dirty experiences
     const dirtyNames = useMemo(() => {
+        // Map ids to name
         return dirtyIds
             .map(id => {
                 const ex = allExperiences.find(e => e._id === id);
@@ -70,17 +100,21 @@ export default function ExperienceCards() {
             .filter(Boolean);
     }, [dirtyIds, allExperiences]);
 
+    // Use the useUnsavedChangesGuard hook
     useUnsavedChangesGuard({
         when: dirtyIds.length > 0,
         names: dirtyNames,
-        suppress: savingRef.current || guardBypassRef.current, // ← include bypass
-        onConfirm: () => {
-            guardBypassRef.current = true;      // suppress the next nav
-            navigate("/admin", { replace: true });
+        suppress: savingRef.current || guardBypassRef.current,
+        onConfirm: (proceed) => {
+            guardBypassRef.current = true; // bypass the guard when the user agrees to lose unsaved changes
+            proceed();
         },
     });
+
+    // The component itself
     return (
         <div className="px-6 py-4">
+            {/* Toast that shows after a save has happened */}
             {showToast && (
                 <div role="status" className="fixed top-4 right-4 z-50 rounded-md border border-gray-300 bg-white p-4 shadow-sm">
                     <div className="flex items-start gap-4">
@@ -130,6 +164,8 @@ export default function ExperienceCards() {
                     </div>
                 </div>
             )}
+
+            {/* Titel and Nav */}
             <h2 className="mb-6 text-4xl font-extrabold text-gray-900">Experiences</h2>
             <Link
                 to="/admin"
@@ -137,6 +173,8 @@ export default function ExperienceCards() {
             >
                 Back to Admin
             </Link>
+
+            {/* Map all my experiences to individual cards */}
             <div className="space-y-6 mt-4">
                 {allExperiences.map((experience) => (
                     <ExperienceChange
@@ -153,6 +191,7 @@ export default function ExperienceCards() {
                     />
                 ))}
 
+                {/* Option to add experience */}
                 <Form
                     method="POST"
                     action={`/admin/experiences`}
@@ -167,6 +206,8 @@ export default function ExperienceCards() {
                     </button>
                 </Form>
             </div>
+
+            {/* Navigation to admin at bottom of page */}
             <Link
                 to="/admin"
                 className="inline-block mt-8 text-xl font-semibold text-blue-700 hover:underline"

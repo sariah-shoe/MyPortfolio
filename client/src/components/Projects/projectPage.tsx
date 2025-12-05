@@ -1,8 +1,7 @@
-import Header from '../HeaderFooter/header';
-import Footer from '../HeaderFooter/footer';
 import CustomCarousel from '../Shared/CustomCarousel';
 import type { ProjectObject } from '../Shared/types';
 import { useLoaderData } from 'react-router-dom';
+import { formatExperienceRange } from '../Shared/dateUtils';
 
 export default function ProjectPage() {
     const { project } = useLoaderData() as { project: ProjectObject }
@@ -21,7 +20,7 @@ export default function ProjectPage() {
                                     </h2>
 
                                     <h3 className="mt-1 text-base text-gray-700 sm:text-lg">
-                                        {project.startDate} {project.endDate === project.startDate ? <></> : project.endDate !== "" ? ` to ${project.endDate}` : " to present"}
+                                        {formatExperienceRange(project.startDate, project.endDate)}
                                     </h3>
 
                                     <p className="mt-4 text-sm text-gray-600 sm:text-base">

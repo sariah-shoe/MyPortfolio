@@ -1,10 +1,9 @@
-import Header from '../HeaderFooter/header';
-import Footer from '../HeaderFooter/footer';
 import Filter from '../Shared/Filter';
 import SearchBar from '../Shared/SearchBar';
 import type { ProjectObject } from '../Shared/types';
 import { useState } from 'react';
 import { Link, useLoaderData } from 'react-router-dom';
+import { formatExperienceRange } from '../Shared/dateUtils';
 
 export default function Projects() {
     const { allProjects } = useLoaderData() as { allProjects: ProjectObject[] }
@@ -106,8 +105,7 @@ export default function Projects() {
 
                                         <div>
                                             <h2>
-                                                {project.startDate}
-                                                {project.endDate !== "" ? ` to ${project.endDate}` : " to present"}
+                                                {formatExperienceRange(project.startDate, project.endDate)}
                                             </h2>
                                         </div>
 

@@ -60,11 +60,10 @@ export default function AboutChange() {
         onConfirm: (proceed) => {
             guardBypassRef.current = true; // bypass the guard when the user agrees to lose unsaved changes
             proceed();
-            // navigate("/admin", { replace: true }); 
         },
     });
 
-    // Effect to handle my wasSubmitting state
+    // Effect to handle my wasSubmitting state for toast
     useEffect(() => {
         if (navigation.state === "submitting" && navigation.formMethod?.toLowerCase() === "put") {
             setWasSubmitting(true);

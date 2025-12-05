@@ -5,10 +5,11 @@ type FileObject = BaseFileObject & { _id?: string };
 
 interface FileListEditorProps {
   initialFiles: FileObject[];
-  max?: number; // default 10
+  max?: number;
   resetKey?: number;
 }
 
+// Editable list of files
 export default function FileListEditor({
   initialFiles,
   max = 10,
@@ -54,8 +55,10 @@ export default function FileListEditor({
     };
   }, [newPreviews]);
 
+  // Delete photos
   const toggleDelete = (id?: string) => {
     if (!id) return; // only existing files have ids
+    // Existing files are added to pending deletes
     setPendingDeletes((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
@@ -63,10 +66,12 @@ export default function FileListEditor({
     });
   };
 
+  // Calculate number of files
   const existingCount = files.filter((f) => !pendingDeletes.has(String(f._id))).length;
   const totalAfterAdd = existingCount + newFiles.length;
   const atCap = totalAfterAdd >= max;
 
+  // Handling change to new files (not saved in server yet)
   const onNewFilesChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const selected = Array.from(e.currentTarget.files ?? []);
     if (!selected.length) return;
@@ -90,6 +95,7 @@ export default function FileListEditor({
     setNewPreviews((prev) => [...prev, ...toAdd.map((f) => URL.createObjectURL(f))]);
   };
 
+  // Handling deleting new files (not saved in server yet)
   const removeNewFile = (index: number) => {
     // Remove from newFiles and rebuild the input's FileList
     setNewFiles((prev) => {
@@ -126,18 +132,16 @@ export default function FileListEditor({
         return (
           <div
             key={id ?? `existing-${index}`}
-            className={`flex flex-col gap-4 border p-4 rounded shadow-sm ${
-              marked ? "opacity-60 ring-2 ring-red-500" : "bg-white"
-            }`}
+            className={`flex flex-col gap-4 border p-4 rounded shadow-sm ${marked ? "opacity-60 ring-2 ring-red-500" : "bg-white"
+              }`}
           >
             <div className="flex justify-between items-center">
               {id ? (
                 <button
                   type="button"
                   onClick={() => toggleDelete(id)}
-                  className={`px-3 py-1.5 rounded text-white ${
-                    marked ? "bg-gray-600 hover:bg-gray-700" : "bg-red-600 hover:bg-red-700"
-                  }`}
+                  className={`px-3 py-1.5 rounded text-white ${marked ? "bg-gray-600 hover:bg-gray-700" : "bg-red-600 hover:bg-red-700"
+                    }`}
                 >
                   {marked ? "Undo Delete" : "Mark for Delete"}
                 </button>
@@ -230,6 +234,7 @@ export default function FileListEditor({
           disabled={atCap}
         />
 
+        {/* Show user how many more images they can add and if they are at cap */}
         {!atCap ? (
           <p className="mt-2 text-sm text-gray-600">
             Click to choose up to {Math.max(0, max - existingCount - newFiles.length)} more.
