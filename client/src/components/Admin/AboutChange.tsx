@@ -1,5 +1,4 @@
-// AboutChange.tsx
-import { Link, Form, useLoaderData, useNavigation, useNavigate } from "react-router-dom";
+import { Link, Form, useLoaderData, useNavigation } from "react-router-dom";
 import type { AboutObject } from "../Shared/types";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useFormDirtyState } from "../../hooks/useFormDirtyState";
@@ -7,75 +6,91 @@ import { useUnsavedChangesGuard } from "../../hooks/useUnsavedChangesGuard";
 import { useAuth } from "../Shared/AuthContext";
 
 export default function AboutChange() {
+    // Loaded data
     const { aboutMeData } = useLoaderData() as { aboutMeData: AboutObject };
-    const navigation = useNavigation();
-    const navigate = useNavigate();
 
+    // Navigation to help with unsaved change guard, toast, and form submission
+    const navigation = useNavigation();
+
+    // Toast state, showing or not
     const [showToast, setShowToast] = useState(false);
+
+    // State to keep track of submissions
     const [wasSubmitting, setWasSubmitting] = useState(false);
+
+    // Reset counter for dirty tracking
     const [resetCounter, setResetCounter] = useState(0);
 
+    // States to help handle file previews
     const [headshot, setHeadshot] = useState(aboutMeData.headshot?.url);
     const [resume, setResume] = useState(aboutMeData.resume?.url);
 
+    // Refs to keep track of the file input
     const headshotInputRef = useRef<HTMLInputElement>(null);
     const resumeInputRef = useRef<HTMLInputElement>(null);
 
+    // Refs to keep track of file preview
     const headshotPreviewRef = useRef<string | null>(null);
     const resumePreviewRef = useRef<string | null>(null);
 
+    // Use auth
     const { auth } = useAuth();
 
-
-    // ---- form-level dirty tracking
     // Memoize baseline off loader data
+    // Only blurb is memoized, dirty states for images are handled through childDirty
     const baseline = useMemo(() => ({
         blurb: aboutMeData.blurb ?? "",
-        // e.g. headshotId: aboutMeData.headshot?.id ?? "",
-        //      resumeId:   aboutMeData.resume?.id ?? "",
-    }), [aboutMeData.blurb /*, aboutMeData.headshot?.id, aboutMeData.resume?.id */]);
+    }), [aboutMeData.blurb]);
 
+    // Use the useFormDirty state hook
     const { formRef, isDirty, childDirty } = useFormDirtyState({
         baseline,
-        // no onDirtyChange map needed since this page has a single form;
-        // the guard just uses `isDirty` directly
         resetKey: resetCounter,
     });
 
-    // ---- suppress guard during PUT saves and for our own redirect
+    // Refs to help suppress guard during PUT saves and for our own redirect
     const savingRef = useRef(false);
     const guardBypassRef = useRef(false);
 
+    // Use the useUnsavedChangesGuard hook
     useUnsavedChangesGuard({
         when: isDirty,
         names: ["About Me"],
         suppress: savingRef.current || guardBypassRef.current,
-        onConfirm: () => {
-            guardBypassRef.current = true;          // bypass the guard for our own nav
-            navigate("/admin", { replace: true });  // your desired destination
+        onConfirm: (proceed) => {
+            guardBypassRef.current = true; // bypass the guard when the user agrees to lose unsaved changes
+            proceed();
+            // navigate("/admin", { replace: true }); 
         },
     });
 
-    // existing toast + reset of savingRef after save completes
+    // Effect to handle my wasSubmitting state
     useEffect(() => {
         if (navigation.state === "submitting" && navigation.formMethod?.toLowerCase() === "put") {
             setWasSubmitting(true);
         }
     }, [navigation.state, navigation.formMethod]);
 
+    // Effect to handle toast
     useEffect(() => {
+        // If we had made a submission and now we're done
         if (wasSubmitting && navigation.state === "idle") {
+            // Have the toast show and set a timeout for it to go away
             setShowToast(true);
             setTimeout(() => setShowToast(false), 3000);
+
+            // Reset was submitting and my saving ref
             setWasSubmitting(false);
-            savingRef.current = false; // allow guard again
+            savingRef.current = false;
+
+            // Let the useFormDirtyState know that we are clean again
             setResetCounter(c => c + 1);
             
-            // Clear inputs
+            // Clear file inputs
             if (headshotInputRef.current) headshotInputRef.current.value = "";
             if (resumeInputRef.current) resumeInputRef.current.value = "";
 
-            // Clear previews
+            // Clear file previews
             if (headshotPreviewRef.current){
                 URL.revokeObjectURL(headshotPreviewRef.current);
                 headshotPreviewRef.current = null;
@@ -86,40 +101,48 @@ export default function AboutChange() {
                 resumePreviewRef.current = null;
             }
 
-            // Re-seed from server data
+            // Re-seed files from server data
             setHeadshot(aboutMeData.headshot?.url);
             setResume(aboutMeData.resume?.url);
         }
-    }, [navigation.state, wasSubmitting, aboutMeData]);
+    }, [navigation.state, wasSubmitting, aboutMeData]); // This should run whenever we get a change to our navigation, submission, or data
 
+    // Handles headshot changes
     const onHeadshotChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+        // Make sure there is a file and that it is not empty
         const f = e.currentTarget.files?.[0];
         if (!f || f.size === 0) return;
 
         // Revoke previous blob preview
         if (headshotPreviewRef.current) URL.revokeObjectURL(headshotPreviewRef.current);
         
-        // Set new preview
+        // Set new preview and mark as dirty
         const url = URL.createObjectURL(f);
         headshotPreviewRef.current = url;
         setHeadshot(url);
         childDirty(true);
     }
 
+    // Handles resume changes
     const onResumeChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+        // Make sure there is a file and it is not empty
         const f = e.currentTarget.files?.[0];
         if (!f || f.size === 0) return;
 
+        // Revoke previous blob preview
         if(resumePreviewRef.current) URL.revokeObjectURL(resumePreviewRef.current);
 
+        // Set new preview and mark as dirty
         const url = URL.createObjectURL(f);
         resumePreviewRef.current = url;
         setResume(url);
         childDirty(true);
     }
 
+    // The component itself
     return (
         <div>
+            {/* My toast component that shows after a save */}
             {showToast && (
                 <div role="status" className="fixed top-4 right-4 z-50 rounded-md border border-gray-300 bg-white p-4 shadow-sm">
                     <div className="flex items-start gap-4">
@@ -168,11 +191,13 @@ export default function AboutChange() {
                 </div>
             )}
 
-            <h2 className="mb-6 text-4xl font-extrabold text-gray-900">About Me</h2>
-            <Link to="/admin" className="inline-block mt-8 text-xl font-semibold text-blue-700 hover:underline">
+            {/* Title and nav */}
+            <h2 className="mb-2 text-4xl font-bold text-gray-900">About Me</h2>
+            <Link to="/admin" className="inline-block mt-2 text-xl font-semibold text-blue-700 hover:underline">
                 Back to Admin
             </Link>
 
+            {/* Form for changing data */}
             <Form
                 className="max-w-sm mx-auto"
                 action={`/admin/about`}
@@ -183,6 +208,7 @@ export default function AboutChange() {
                     savingRef.current = true; // suppress guard while the PUT goes out
                 }}
             >
+                {/* If there are unsaved changes to the form, display this warning at the top */}
                 {isDirty && <div role="status" className="border-s-4 border-yellow-700 bg-yellow-50 p-4">
                     <div className="flex items-center gap-2 text-yellow-700">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
@@ -200,7 +226,8 @@ export default function AboutChange() {
                         You have made changes to the about me information. If you do not save, you will lose your changes when you navigate away.
                     </p>
                 </div>}
-
+                
+                {/* The about me blurb input */}
                 <div className="mb-5 mt-4">
                     <label className="block mb-2 text-sm font-medium text-gray-900">
                         About Me Text
@@ -214,6 +241,7 @@ export default function AboutChange() {
                     </label>
                 </div>
 
+                {/* Headshot input and preview */}
                 <div className="mb-5">
                     {headshot ? (<img src={headshot} alt="Headshot of Sariah Shoemaker" />) : <div className="h-32 w-32 bg-gray-100 rounded-md grid place-items-center text-sm text-gray-500">
                         No headshot
@@ -235,6 +263,7 @@ export default function AboutChange() {
                     </label>
                 </div>
 
+                {/* Resume input and preview */}
                 <div className="mb-5">
                     {resume ?
                         (<iframe
@@ -251,7 +280,6 @@ export default function AboutChange() {
                     <label htmlFor="resumeFile" className="block rounded border border-gray-300 p-4 text-gray-900 shadow-sm sm:p-6">
                         <div className="flex items-center justify-center gap-4">
                             <span className="font-medium">Upload New Resume</span>
-                            {/* …icon… */}
                         </div>
                         <input
                             ref={resumeInputRef}
@@ -265,6 +293,7 @@ export default function AboutChange() {
                     </label>
                 </div>
 
+                {/* Submission button, disabled if not authenticated */}
                 <div className="mb-5">
                     <button
                         type="submit"
@@ -275,7 +304,8 @@ export default function AboutChange() {
                     </button>
                 </div>
             </Form>
-
+            
+            {/* Navigation to admin at bottom of page */}
             <Link to="/admin" className="inline-block mt-8 text-xl font-semibold text-blue-700 hover:underline">
                 Back to Admin
             </Link>

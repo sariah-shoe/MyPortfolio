@@ -12,3 +12,9 @@ In progress
   - Contact me form functional
   - Connecting to Mongo Atlas instead of local Mongodb
   - Deployment
+
+Big thank you to:
+I used various parts of their styling and icons throughout the project
+https://www.hyperui.dev
+https://flowbite.com/icons/
+https://icons.getbootstrap.com 

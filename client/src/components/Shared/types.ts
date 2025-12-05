@@ -45,3 +45,7 @@ export type AuthContextType = {
   auth: boolean;
   setAuth: React.Dispatch<React.SetStateAction<boolean>>;
 };
+
+export type AdminOutletContext = {
+  setHasUnsavedChanges: (value: boolean) => void;
+};

@@ -1,17 +1,14 @@
-// useUnsavedChangesGuard.ts
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBlocker } from "react-router";
 
+// Options for components using the hook
 type GuardOptions = {
   when: boolean;
   names?: string[];
   suppress?: boolean;
-  /** If provided, called when user confirms leaving. Caller can navigate & suppress. */
-  onConfirm?: () => void;
-  /** Alternatively, let the hook redirect on confirm (see Option B) */
-  redirectOnConfirm?: string;
-  buildMessage?: (names: string[]) => string;
+  // Called when user confirms leaving. Caller can navigate & suppress.
+  onConfirm: (proceed: () => void) => void;
 };
 
 export function useUnsavedChangesGuard({
@@ -19,21 +16,25 @@ export function useUnsavedChangesGuard({
   names = [],
   suppress = false,
   onConfirm,
-  redirectOnConfirm,
-  buildMessage,
 }: GuardOptions) {
+  // Navigate and blocker
   const navigate = useNavigate();
   const blocker = useBlocker(when);
 
-  // prevents calling proceed() multiple times while suppressed
+  // Prevents calling proceed() multiple times while suppressed
   const proceededRef = useRef(false);
 
+  // Guard for unsaved changes
   useEffect(() => {
+    // If we aren't blocked, we don't need to do anything
     if (blocker.state !== "blocked"){
       proceededRef.current = false; 
       return;
     }
 
+    const proceed = () => blocker.proceed();
+
+    // Supression logic so we can get past guard
     if (suppress) {
       if (!proceededRef.current){
         proceededRef.current = true;
@@ -42,40 +43,35 @@ export function useUnsavedChangesGuard({
       return;
     }
 
+    // Make a list of fields with changes
     const list = names.filter(Boolean);
-    const defaultMsg =
+
+    // Make a message
+    const msg =
       list.length > 0
         ? `You have unsaved changes to: ${list.join(", ")}.\nAre you sure you want to leave?`
         : `You have unsaved changes.\nAre you sure you want to leave?`;
-    const msg = buildMessage ? buildMessage(list) : defaultMsg;
 
+    // Show the confirmation dialog and capture the user's response
     const confirmed = window.confirm(msg);
 
+    // If the user confirms they want to leave
     if (confirmed) {
-      if (onConfirm) {
-        // Caller will handle suppression + navigation
-        blocker.reset();
-        onConfirm();
-      } else if (redirectOnConfirm) {
-        // Fallback: internal redirect (Option B behavior)
-        blocker.reset();
-        navigate(redirectOnConfirm, { replace: true });
-      } else {
-        blocker.proceed(); // continue original nav
-      }
+        // blocker.reset();
+        onConfirm(proceed);
     } else {
-      blocker.reset(); // stay put
+      blocker.reset(); // Otherwise, don't leave
     }
-  }, [blocker.state, suppress, names, buildMessage, onConfirm, redirectOnConfirm, navigate, blocker]);
+  }, [blocker.state, suppress, names, onConfirm, navigate, blocker]);
 
-  // Hard reload / tab close
+  // If there's a hard reload / tab close
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
       if (when && !suppress) {
         e.preventDefault();
-        e.returnValue = "";
       }
     };
+    // Listen for a before unload and handle it by showing the supression
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [when, suppress]);

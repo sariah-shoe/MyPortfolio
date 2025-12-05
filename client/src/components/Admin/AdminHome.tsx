@@ -2,6 +2,7 @@ import { Link } from "react-router-dom"
 export default function AdminHome() {
 
     return (
+        // Simple navigation to each of the admin pages
         <div className="flex flex-col items-center">
             <div className="flex flex-col items-center block rounded-md border border-gray-300 p-4 shadow-sm sm:p-6">
                 <Link to={"/admin/about"} className="mb-4 text-3xl font-bold leading-none tracking-tight text-gray-900 md:text-4xl">About Me</Link>
