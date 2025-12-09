@@ -211,7 +211,6 @@ export default function FileListEditor({
 
       {/* New uploads picker */}
       <label
-        htmlFor="newImages"
         className="block rounded border border-gray-300 p-4 text-gray-900 shadow-sm sm:p-6 cursor-pointer"
       >
         <div className="flex items-center justify-between gap-4">
@@ -227,7 +226,6 @@ export default function FileListEditor({
           multiple
           accept="image/*"
           type="file"
-          id="newImages"
           name="newImages"
           className="sr-only"
           onChange={onNewFilesChange}

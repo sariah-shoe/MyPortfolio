@@ -59,7 +59,7 @@ export default function NavDropdown({ label, defaultHref, items} : NavDropdownPr
         >
           <ul className="py-1 text-sm text-gray-700">
             {items.map((item) => 
-            <li>
+            <li key={label}>
                 <Link to={item.href} className="block px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none">{item.name}</Link>
             </li>
             )}

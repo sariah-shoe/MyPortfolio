@@ -14,7 +14,6 @@ export default function ExperienceCards() {
 
     // Navigation to help with unsaved change guard, toast, and form submission
     const navigation = useNavigation();
-    const navigate = useNavigate();
 
     // Toast state, showing or not
     const [showToast, setShowToast] = useState(false);
@@ -33,9 +32,14 @@ export default function ExperienceCards() {
     const savingRef = useRef(false);
     const guardBypassRef = useRef(false);
 
-     // Reset counter for dirty tracking
+    // Reset counter for dirty tracking
     const [resetCounter, setResetCounter] = useState(0);
     const lastSavedIdRef = useRef<string | null>(null);
+
+    // States for search and sort
+    const [search, setSearch] = useState("")
+    type SortBy = "date-desc" | "date-asc" | "alpha-asc" | "alpha-desc"
+    const [sortBy, setSortBy] = useState<SortBy>("date-desc");
 
     // Use Auth
     const { auth } = useAuth();
@@ -111,6 +115,73 @@ export default function ExperienceCards() {
         },
     });
 
+    // Helper to pick date for sorting
+    const getSortDate = (ex: ExperienceObject) => {
+        const raw = ex.endDate || ex.startDate;
+        return raw ? new Date(raw).getTime() : 0;
+    }
+
+    // Filter the list by search
+    const filteredExperiences = useMemo(
+        () =>
+            allExperiences.filter((ex) => {
+                if (!search.trim()) return true;
+                const q = search.toLowerCase();
+
+                return (
+                    ex.position.toLowerCase().includes(q) ||
+                    ex.company.toLowerCase().includes(q) ||
+                    ex.typeEx.toLowerCase().includes(q) ||
+                    ex.startDate.toLowerCase().includes(q) ||
+                    ex.endDate.toLowerCase().includes(q) ||
+                    ex.highlights.some((h) => h.toLowerCase().includes(q)) ||
+                    ex.skills.some((s) => s.toLowerCase().includes(q))
+                );
+            }),
+        [allExperiences, search]
+    )
+
+    // Combine my search filtered list with a list of dirty cards then sort
+    // I chose to have this combine with the dirty cards so the user doesn't "lose" cards with unsaved changes
+    const visibleExperiences = useMemo(() => {
+        const dirtySet = new Set(dirtyIds);
+        const combined: ExperienceObject[] = [];
+
+        // Add all my dirty experiences
+        for (const ex of allExperiences) {
+            if (dirtySet.has(ex._id)) {
+                combined.push(ex);
+            }
+        }
+
+        // Add my filtered clean experiences
+        for (const ex of filteredExperiences) {
+            if (!dirtySet.has(ex._id)) {
+                combined.push(ex);
+            }
+        }
+
+        // Sort the combined list
+        return combined.sort((a, b) => {
+            switch (sortBy) {
+                case "date-asc":
+                    return getSortDate(a) - getSortDate(b);
+                case "date-desc":
+                    return getSortDate(b) - getSortDate(a);
+                case "alpha-asc":
+                    return a.position.localeCompare(b.position, "en", {
+                        sensitivity: "base",
+                    });
+                case "alpha-desc":
+                    return b.position.localeCompare(a.position, "en", {
+                        sensitivity: "base",
+                    });
+                default:
+                    return 0;
+            }
+        });
+    }, [allExperiences, filteredExperiences, dirtyIds, sortBy])
+
     // The component itself
     return (
         <div className="px-6 py-4">
@@ -176,7 +247,58 @@ export default function ExperienceCards() {
 
             {/* Map all my experiences to individual cards */}
             <div className="space-y-6 mt-4">
-                {allExperiences.map((experience) => (
+                {/* Controls row */}
+                <div className="mt-4 mb-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="exp-search" className="text-sm text-gray-700">
+                            Search
+                        </label>
+                        <input
+                            id="exp-search"
+                            type="text"
+                            className="rounded border border-gray-300 px-2 py-1 text-sm"
+                            placeholder="Search experiences…"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="exp-sort" className="text-sm text-gray-700">
+                            Sort by
+                        </label>
+                        <select
+                            id="exp-sort"
+                            className="rounded border border-gray-300 bg-white px-2 py-1 text-sm"
+                            value={sortBy}
+                            onChange={(e) =>
+                                setSortBy(e.target.value as SortBy)
+                            }
+                        >
+                            <option value="date-desc">Newest first</option>
+                            <option value="date-asc">Oldest first</option>
+                            <option value="alpha-asc">Position A → Z</option>
+                            <option value="alpha-desc">Position Z → A</option>
+                        </select>
+                    </div>
+                </div>
+
+                {/* Option to add experience */}
+                <Form
+                    method="POST"
+                    action={`/admin/experiences`}
+                    onSubmit={() => { savingRef.current = true; }}
+                >
+                    <button
+                        type="submit"
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-700"
+                        disabled={!auth}
+                    >
+                        Add Experience
+                    </button>
+                </Form>
+
+                {visibleExperiences.map((experience) => (
                     <ExperienceChange
                         key={experience._id}
                         experience={experience}

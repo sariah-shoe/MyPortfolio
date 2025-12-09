@@ -18,7 +18,8 @@ function formatMonthYear(dateString?: string | null): string | null {
 // Format a range of dates
 export function formatExperienceRange(
   startDate?: string | null,
-  endDate?: string | null
+  endDate?: string | null,
+  personal?: boolean
 ): string {
   // Format start and end date
   const start = formatMonthYear(startDate);
@@ -27,6 +28,8 @@ export function formatExperienceRange(
   // Remove impossible/invalid dates
   if (!start && !end) return "";
   if (!start && end) return end;
+
+  if(personal) return start ?? "";
 
   // If there's no end date, return start - present
   if (start && !end) return `${start} to present`;

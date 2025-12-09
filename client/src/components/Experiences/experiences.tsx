@@ -35,6 +35,10 @@ export default function Experiences() {
     // State for filter
     const [filter, setFilter] = useState<string[]>([]);
 
+    // State for sort
+    const [sortBy, setSortBy] = useState<
+        "date-desc" | "date-asc" | "alpha-asc" | "alpha-desc"
+    >("date-desc");
 
     // State for search
     const [search, setSearch] = useState("");
@@ -82,7 +86,7 @@ export default function Experiences() {
                             </div>
 
                             {/* Filter for skills*/}
-                            <div>
+                            <div className="flex items-center gap-6">
                                 {proff ?
                                     <Filter
                                         skills={personalSkills}
@@ -96,6 +100,30 @@ export default function Experiences() {
                                         setFilter={setFilter}
                                     />
                                 }
+
+                                {/* Sort dropdown */}
+                                <div className="p-2">
+                                    <label className="mr-2 text-sm text-gray-700" htmlFor="sortBy">
+                                        Sort by
+                                    </label>
+                                    <select
+                                        id="sortBy"
+                                        className="rounded border border-gray-300 bg-white px-2 py-1 text-sm"
+                                        value={sortBy}
+                                        onChange={(e) =>
+                                            setSortBy(e.target.value as
+                                                | "date-desc"
+                                                | "date-asc"
+                                                | "alpha-asc"
+                                                | "alpha-desc")
+                                        }
+                                    >
+                                        <option value="date-desc">Newest first</option>
+                                        <option value="date-asc">Oldest first</option>
+                                        <option value="alpha-asc">Position A → Z</option>
+                                        <option value="alpha-desc">Position Z → A</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                         {/* Grid of cards */}
@@ -132,8 +160,33 @@ export default function Experiences() {
                                     return matchesType && matchesSkills && matchesSearch;
 
                                 })
+                                .sort((a, b) => {
+                                    // helper to pick a date to sort by: endDate if present, otherwise startDate
+                                    const getSortDate = (ex: ExperienceObject) =>
+                                        ex.endDate && ex.endDate !== ""
+                                            ? new Date(ex.endDate).getTime()
+                                            : new Date(ex.startDate).getTime();
+
+                                    switch (sortBy) {
+                                        case "date-asc":
+                                            return getSortDate(a) - getSortDate(b); // oldest first
+                                        case "date-desc":
+                                            return getSortDate(b) - getSortDate(a); // newest first
+                                        case "alpha-asc":
+                                            return a.position.localeCompare(b.position, "en", {
+                                                sensitivity: "base",
+                                            });
+                                        case "alpha-desc":
+                                            return b.position.localeCompare(a.position, "en", {
+                                                sensitivity: "base",
+                                            });
+                                        default:
+                                            return 0;
+                                    }
+                                })
                                 .map(experience =>
                                     <article
+                                        key={experience._id}
                                         className="rounded-lg border border-gray-100 bg-white p-4 shadow-xs transition hover:shadow-lg sm:p-6"
                                     >
                                         <span className="inline-block rounded-sm bg-blue-600 p-2 text-white">
@@ -165,17 +218,13 @@ export default function Experiences() {
                                         <div>
                                             <h2>{experience.company}</h2>
                                             <h2>
-                                                {formatExperienceRange(experience.startDate, experience.endDate)}
+                                                {formatExperienceRange(experience.startDate, experience.endDate, (experience.typeEx === "Personal"))}
                                             </h2>
                                         </div>
 
-                                        <p className="mt-2 line-clamp-3 text-sm/relaxed text-gray-500">
-                                            <ul>
-                                                {experience.highlights.map((highlight: string, idx: number) => (
-                                                    <li key={idx}>{highlight}</li>
-                                                ))}
-                                            </ul>
-                                        </p>
+                                        <div className="mt-2 line-clamp-3 text-sm/relaxed text-gray-500">
+                                            <p>{experience.extra}</p>
+                                        </div>
 
                                         <div className="mt-4 flex flex-wrap gap-1">
                                             {experience.skills.length > 0 ? experience.skills.map((skill: string, idx: number) =>

@@ -33,7 +33,7 @@ export default function ExperiencePage() {
                                         {experience.position} at {experience.company}
                                     </h2>
 
-                                    <h3 className="mt-1 text-base text-gray-700 sm:text-lg">{experience.startDate} {experience.typeEx === "Personal" ? "" : experience.endDate !== "" ? ` to ${experience.endDate}` : " to present"}</h3>
+                                    <h3 className="mt-1 text-base text-gray-700 sm:text-lg">{formatExperienceRange(experience.startDate, experience.endDate, (experience.typeEx === "Personal"))}</h3>
 
                                     <p className="mt-4 text-sm text-gray-600 sm:text-base">
                                         {experience.extra}
@@ -54,7 +54,7 @@ export default function ExperiencePage() {
             </section>
             {/* This section holds two cards that show my highlights and skills */}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-8 mx-4 my-10 sm:mx-8 lg:mx-16">
-                <div className="h-32">
+                <div>
                     <div className="block rounded-md border border-gray-300 p-4 shadow-sm sm:p-6">
                         <div className="sm:flex sm:justify-between sm:gap-4 lg:gap-6">
                             <div className="mt-4 sm:mt-0">
@@ -62,13 +62,13 @@ export default function ExperiencePage() {
                                     Highlights of my Experience
                                 </h3>
                                 <ul className="mt-4 list-disc list-inside text-sm text-gray-700 space-y-1">
-                                    {experience.highlights.map((highlight) => <li>{highlight}</li>)}
+                                    {experience.highlights.map((highlight) => <li key={highlight}>{highlight}</li>)}
                                 </ul>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className="h-32">
+                <div>
                     <div className="block rounded-md border border-gray-300 p-4 shadow-sm sm:p-6">
                         <div className="sm:flex sm:justify-between sm:gap-4 lg:gap-6">
                             <div className="mt-4 sm:mt-0">
@@ -76,7 +76,7 @@ export default function ExperiencePage() {
                                     Skills Learned and Used
                                 </h3>
                                 <ul className="mt-4 list-disc list-inside text-sm text-gray-700 space-y-1">
-                                    {experience.skills.map((skill) => <li>{skill}</li>)}
+                                    {experience.skills.map((skill) => <li key={skill}>{skill}</li>)}
                                 </ul>
                             </div>
                         </div>
