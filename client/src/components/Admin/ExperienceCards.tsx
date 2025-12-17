@@ -1,10 +1,11 @@
 // ExperienceCards.tsx
-import { Link, useLoaderData, Form, useNavigation, useNavigate } from "react-router-dom";
+import { Link, useLoaderData, Form, useNavigation } from "react-router-dom";
 import ExperienceChange from "./ExperienceChange";
 import type { ExperienceObject } from "../Shared/types";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useUnsavedChangesGuard } from "../../hooks/useUnsavedChangesGuard";
 import { useAuth } from "../Shared/AuthContext";
+import { getSortDate } from "../Shared/dateSorter";
 
 // Holds all my experiences
 
@@ -115,12 +116,6 @@ export default function ExperienceCards() {
         },
     });
 
-    // Helper to pick date for sorting
-    const getSortDate = (ex: ExperienceObject) => {
-        const raw = ex.endDate || ex.startDate;
-        return raw ? new Date(raw).getTime() : 0;
-    }
-
     // Filter the list by search
     const filteredExperiences = useMemo(
         () =>
@@ -135,7 +130,8 @@ export default function ExperienceCards() {
                     ex.startDate.toLowerCase().includes(q) ||
                     ex.endDate.toLowerCase().includes(q) ||
                     ex.highlights.some((h) => h.toLowerCase().includes(q)) ||
-                    ex.skills.some((s) => s.toLowerCase().includes(q))
+                    ex.skills.some((s) => s.toLowerCase().includes(q)) ||
+                    ex.extra.toLowerCase().includes(q)
                 );
             }),
         [allExperiences, search]

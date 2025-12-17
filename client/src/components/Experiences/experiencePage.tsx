@@ -15,7 +15,7 @@ export default function ExperiencePage() {
                     {experience.images.length == 0 ?
                         <div className="max-w-lg md:max-w-none">
                             <h2 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
-                                {experience.position} at {experience.company}
+                                {experience.position} {experience.typeEx == "Personal" ? "" : `at ${experience.company}`}
                             </h2>
 
                             <h3 className="mt-1 text-base text-gray-700 sm:text-lg">{formatExperienceRange(experience.startDate, experience.endDate)}</h3>
@@ -30,7 +30,7 @@ export default function ExperiencePage() {
                             <div className="md:col-span-1">
                                 <div className="max-w-lg md:max-w-none">
                                     <h2 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
-                                        {experience.position} at {experience.company}
+                                         {experience.position} {experience.typeEx == "Personal" ? "" : `at ${experience.company}`}
                                     </h2>
 
                                     <h3 className="mt-1 text-base text-gray-700 sm:text-lg">{formatExperienceRange(experience.startDate, experience.endDate, (experience.typeEx === "Personal"))}</h3>

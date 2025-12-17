@@ -252,7 +252,7 @@ export default function ExperienceChange({
           {/* FileList of images */}
           <div className="mt-2">
             <label className="font-semibold">Images:</label>
-            <FileListEditor initialFiles={experience.images} resetKey={resetKey} />
+            <FileListEditor initialFiles={experience.images} resetKey={resetKey} onDirty={(dirty) => childDirty(dirty)}/>
           </div>
 
           {/* Input for extra info */}

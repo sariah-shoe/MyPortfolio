@@ -33,7 +33,6 @@ export interface ProjectObject {
   endDate: string;
   images: FileObject[];
   gitLink: string;
-  replitLink: string;
   highlights: string[];
   skills: string[];
   extra: string;

@@ -5,6 +5,7 @@ import type { ExperienceObject } from '../Shared/types';
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link, useLoaderData } from 'react-router-dom';
 import { formatExperienceRange } from '../Shared/dateUtils';
+import { getSortDate } from '../Shared/dateSorter';
 
 // Component shows all experiences
 export default function Experiences() {
@@ -47,6 +48,7 @@ export default function Experiences() {
     useEffect(() => {
         setFilter([]);
         setSearch("");
+        setSortBy("date-desc")
     }, [proff]);
 
     // This effect makes sure that when I reach /experiences through the dropdown, it sets to professional or personal correctly
@@ -161,12 +163,6 @@ export default function Experiences() {
 
                                 })
                                 .sort((a, b) => {
-                                    // helper to pick a date to sort by: endDate if present, otherwise startDate
-                                    const getSortDate = (ex: ExperienceObject) =>
-                                        ex.endDate && ex.endDate !== ""
-                                            ? new Date(ex.endDate).getTime()
-                                            : new Date(ex.startDate).getTime();
-
                                     switch (sortBy) {
                                         case "date-asc":
                                             return getSortDate(a) - getSortDate(b); // oldest first

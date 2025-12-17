@@ -27,7 +27,6 @@ export default function ProjectChange({
     () => ({
       name: project.name ?? "",
       gitLink: project.gitLink ?? "",
-      replitLink: project.replitLink ?? "",
       startDate: project.startDate?.slice(0, 10) ?? "",
       endDate: project.endDate?.slice(0, 10) ?? "",
       extra: project.extra ?? "",
@@ -35,7 +34,6 @@ export default function ProjectChange({
     [
       project.name,
       project.gitLink,
-      project.replitLink,
       project.startDate,
       project.endDate,
       project.extra,
@@ -177,13 +175,6 @@ export default function ProjectChange({
               name="gitLink"
               maxLength={300}
             />
-            <input
-              className="p-2 border border-gray-300 rounded"
-              placeholder="Replit Link"
-              defaultValue={project.replitLink}
-              name="replitLink"
-              maxLength={300}
-            />
           </div>
 
           <div>
@@ -206,7 +197,7 @@ export default function ProjectChange({
 
           <div>
             <label className="font-semibold">Images:</label>
-            <FileListEditor initialFiles={project.images} resetKey={resetKey} />
+            <FileListEditor initialFiles={project.images} resetKey={resetKey} onDirty={(dirty) => childDirty(dirty)}/>
           </div>
 
           <div>

@@ -5,6 +5,7 @@ type FileObject = BaseFileObject & { _id?: string };
 
 interface FileListEditorProps {
   initialFiles: FileObject[];
+  onDirty: (isDirty: boolean) => void;
   max?: number;
   resetKey?: number;
 }
@@ -12,8 +13,9 @@ interface FileListEditorProps {
 // Editable list of files
 export default function FileListEditor({
   initialFiles,
+  onDirty,
   max = 10,
-  resetKey = 0,
+  resetKey = 0
 }: FileListEditorProps) {
   // Existing files (from the server)
   const [files, setFiles] = useState<FileObject[]>(initialFiles);
@@ -27,6 +29,9 @@ export default function FileListEditor({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const initialFilesKey = JSON.stringify(initialFiles);
+
+  // Local dirty flag; only flips true on edit, resets when initialItems change
+  const [isDirty, setIsDirty] = useState(false);
 
   // Reset after successful save or when new initial files arrive
   useEffect(() => {
@@ -46,7 +51,11 @@ export default function FileListEditor({
     // Unmark deletions and re-seed existing files
     setPendingDeletes(new Set());
     setFiles(initialFiles);
-  }, [resetKey, initialFilesKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Set as clean
+    setIsDirty(false);
+    onDirty(false);
+  }, [resetKey, initialFilesKey]);
 
   // Cleanup previews on unmount
   useEffect(() => {
@@ -113,6 +122,15 @@ export default function FileListEditor({
       return prev.filter((_, i) => i !== index);
     });
   };
+
+  useEffect(() => {
+    if (isDirty) return;
+    
+    if(newFiles.length > 0 || pendingDeletes.size > 0){
+      setIsDirty(true);
+      onDirty(true);
+    }
+  }, [newFiles, pendingDeletes, isDirty, onDirty])
 
   return (
     <div className="space-y-4">
