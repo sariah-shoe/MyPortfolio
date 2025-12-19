@@ -17,6 +17,7 @@ import AdminErrorPage from "./components/Errors/AdminErrorPage.tsx";
 import * as aboutMeActions from "./apiHandling/aboutMeActions.ts";
 import * as experienceActions from "./apiHandling/experiencesActions.ts";
 import * as projectActions from "./apiHandling/projectsActions.ts";
+import * as contactActions from "./apiHandling/contactActions.ts"
 
 const router = createBrowserRouter([
     {
@@ -26,7 +27,7 @@ const router = createBrowserRouter([
         errorElement: <PublicErrorPage />,
         children: [
             { index: true, element: <AboutMe />, loader: aboutMeActions.load_all },
-            { path: "contact", element: <Contact /> },
+            { path: "contact", element: <Contact />, action: contactActions.sendEmail },
             { path: "experiences", element: <Experiences />, loader: experienceActions.load_all },
             { path: "experiences/:id", element: <ExperiencePage />, loader: experienceActions.load_one },
             { path: "projects", element: <Projects />, loader: projectActions.load_all },
