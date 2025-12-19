@@ -85,7 +85,7 @@ export default function ExperienceChange({
       {isBusy && (
         <div
           className="fixed left-1/2 top-4 z-50 -translate-x-1/2"
-          role="status"
+          role="alert"
           aria-live="polite"
         >
           <div className="flex items-center gap-3 rounded-full bg-gray-900 text-white/90 px-4 py-2 shadow-lg">
@@ -110,7 +110,13 @@ export default function ExperienceChange({
       <Form
         method="delete"
         action={`/admin/experiences/${experience._id}`}
-        onSubmit={() => onDangerousSubmit?.()}
+        onSubmit={(e) => {
+          if (!window.confirm("Delete this experience?")) {
+            e.preventDefault();
+            return;
+          }
+          onDangerousSubmit?.();
+        }}
       >
         <button
           type="submit"
@@ -197,41 +203,77 @@ export default function ExperienceChange({
 
           {/* Input for position, company, and dates */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              className="p-2 border border-gray-300 rounded"
-              placeholder="Position"
-              defaultValue={experience.position}
-              name="position"
-              required
-              maxLength={100}
-            />
-            <input
-              className="p-2 border border-gray-300 rounded"
-              placeholder="Company"
-              defaultValue={experience.company}
-              name="company"
-              maxLength={100}
-            />
-            <input
-              className="p-2 border border-gray-300 rounded"
-              placeholder="Start Date"
-              type="date"
-              defaultValue={experience.startDate?.slice(0, 10) ?? ""}
-              name="startDate"
-              required
-            />
-            <input
-              className="p-2 border border-gray-300 rounded"
-              placeholder="End Date"
-              type="date"
-              defaultValue={experience.endDate?.slice(0, 10) ?? ""}
-              name="endDate"
-            />
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor={`position-${experience._id}`}
+                className="text-sm font-medium text-gray-700"
+              >
+                Position
+              </label>
+              <input
+                id={`position-${experience._id}`}
+                name="position"
+                defaultValue={experience.position}
+                required
+                maxLength={100}
+                className="rounded border border-gray-300 p-2"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor={`company-${experience._id}`}
+                className="text-sm font-medium text-gray-700"
+              >
+                Company
+              </label>
+              <input
+                id={`company-${experience._id}`}
+                name="company"
+                defaultValue={experience.company}
+                maxLength={100}
+                className="rounded border border-gray-300 p-2"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor={`startDate-${experience._id}`}
+                className="text-sm font-medium text-gray-700"
+              >
+                Start Date
+              </label>
+              <input
+                id={`startDate-${experience._id}`}
+                name="startDate"
+                type="date"
+                required
+                defaultValue={experience.startDate?.slice(0, 10) ?? ""}
+                className="rounded border border-gray-300 p-2"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor={`endDate-${experience._id}`}
+                className="text-sm font-medium text-gray-700"
+              >
+                End Date
+              </label>
+              <input
+                id={`endDate-${experience._id}`}
+                name="endDate"
+                type="date"
+                defaultValue={experience.endDate?.slice(0, 10) ?? ""}
+                className="rounded border border-gray-300 p-2"
+              />
+            </div>
           </div>
+
 
           {/* List of highlights */}
           <div className="mt-2">
-            <label className="font-semibold">Highlights:</label>
+            <h3 className="text-sm font-medium text-gray-700">Highlights</h3>
             <List
               name="highlights"
               initialItems={experience.highlights}
@@ -241,7 +283,7 @@ export default function ExperienceChange({
 
           {/* List of skills */}
           <div className="mt-2">
-            <label className="font-semibold">Skills:</label>
+            <h3 className="text-sm font-medium text-gray-700">Skills</h3>
             <List
               name="skills"
               initialItems={experience.skills}
@@ -251,17 +293,18 @@ export default function ExperienceChange({
 
           {/* FileList of images */}
           <div className="mt-2">
-            <label className="font-semibold">Images:</label>
-            <FileListEditor initialFiles={experience.images} resetKey={resetKey} onDirty={(dirty) => childDirty(dirty)}/>
+            <h3 className="text-sm font-medium text-gray-700">Images</h3>
+            <FileListEditor initialFiles={experience.images} resetKey={resetKey} onDirty={(dirty) => childDirty(dirty)} />
           </div>
 
           {/* Input for extra info */}
           <div className="mt-2">
-            <label className="font-semibold">Extra:</label>
+            <label className="text-sm font-medium text-gray-700" htmlFor={`extra-${experience._id}`}>Extra</label>
             <textarea
               className="w-full p-2 border border-gray-300 rounded"
               defaultValue={experience.extra}
               name="extra"
+              id={`extra-${experience._id}`}
               maxLength={2000}
             />
           </div>

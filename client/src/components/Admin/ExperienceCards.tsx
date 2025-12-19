@@ -73,19 +73,11 @@ export default function ExperienceCards() {
 
     // If there's a change to a cards dirty/clean status, pass it on to the children
     const handleDirtyChange = useCallback((id: string, isDirty: boolean) => {
-        const run = () => {
-            // Change dirty experiences state to match
-            setDirtyExperiences(prev => {
-                if (prev[id] === isDirty) return prev;
-                return { ...prev, [id]: isDirty };
-            });
-        };
-        // Run the changes as a microtask or as a promise
-        if (typeof queueMicrotask === "function") {
-            queueMicrotask(run);
-        } else {
-            Promise.resolve().then(run);
-        }
+        // Change dirty experiences state to match
+        setDirtyExperiences(prev => {
+            if (prev[id] === isDirty) return prev;
+            return { ...prev, [id]: isDirty };
+        });
     }, []);
 
     // Ids of currently dirty experiences
@@ -183,7 +175,7 @@ export default function ExperienceCards() {
         <div className="px-6 py-4">
             {/* Toast that shows after a save has happened */}
             {showToast && (
-                <div role="status" className="fixed top-4 right-4 z-50 rounded-md border border-gray-300 bg-white p-4 shadow-sm">
+                <div role="alert" aria-live="assertive" className="fixed top-4 right-4 z-50 rounded-md border border-gray-300 bg-white p-4 shadow-sm">
                     <div className="flex items-start gap-4">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -233,7 +225,7 @@ export default function ExperienceCards() {
             )}
 
             {/* Titel and Nav */}
-            <h2 className="mb-6 text-4xl font-extrabold text-gray-900">Experiences</h2>
+            <h1 className="mb-6 text-4xl font-extrabold text-gray-900">Experiences</h1>
             <Link
                 to="/admin"
                 className="inline-block text-xl font-semibold text-blue-700 hover:underline"

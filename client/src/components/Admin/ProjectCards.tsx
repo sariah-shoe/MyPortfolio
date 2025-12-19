@@ -70,16 +70,8 @@ export default function ProjectCards() {
 
     // If there's a change to a cards dirty/clean state, pass it on to the children
     const handleDirtyChange = useCallback((id: string, isDirty: boolean) => {
-        const run = () => {
-            // Change dirty projects state to match
-            setDirtyProjects(prev => (prev[id] === isDirty ? prev : { ...prev, [id]: isDirty }));
-        };
-        // Run the changes as a microtask or as a promise
-        if (typeof queueMicrotask === "function") {
-            queueMicrotask(run);
-        } else {
-            Promise.resolve().then(run);
-        }
+        // Change dirty projects state to match
+        setDirtyProjects(prev => (prev[id] === isDirty ? prev : { ...prev, [id]: isDirty }));
     }, []);
 
     // Ids of currently dirty projects
@@ -175,7 +167,7 @@ export default function ProjectCards() {
         <div className="px-6 py-4">
             {/* Toast */}
             {showToast && (
-                <div role="status" className="fixed top-4 right-4 z-50 rounded-md border border-gray-300 bg-white p-4 shadow-sm">
+                <div role="alert" aria-live="assertive" className="fixed top-4 right-4 z-50 rounded-md border border-gray-300 bg-white p-4 shadow-sm">
                     <div className="flex items-start gap-4">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -223,7 +215,7 @@ export default function ProjectCards() {
                     </div>
                 </div>
             )}
-            <h2 className="mb-6 text-4xl font-extrabold text-gray-900">Projects</h2>
+            <h1 className="mb-6 text-4xl font-extrabold text-gray-900">Projects</h1>
             <Link
                 to={"/admin"}
                 className="inline-block mt-8 text-xl font-semibold text-blue-700 hover:underline"
@@ -281,7 +273,7 @@ export default function ProjectCards() {
                         Add Project
                     </button>
                 </Form>
-                
+
                 {/* Map the cards themselves */}
                 {visibleProjects.map((project) =>
                     <ProjectChange

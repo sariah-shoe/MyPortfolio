@@ -12,9 +12,9 @@ export default function Admin() {
     return (
         <>
             {/* Banner to display on all the admin pages */}
-            <div className="bg-gray-100 flex items-center flex-col p-4 mb-2">
+            <header className="bg-gray-100 flex items-center flex-col p-4 mb-2">
                 {/* Title of admin pages */}
-                <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl m-2">Admin for Sariah Shoemaker's Portfolio</h1>
+                <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl m-2">Portfolio Admin</h1>
                 {/* Options to login/logout and exit admin */}
                 <div className="flex gap-4">
                     <LogIn />
@@ -25,9 +25,11 @@ export default function Admin() {
                         Return to Home Page
                     </button>
                 </div>
-            </div>
+            </header>
             {/* Outlet for all my admin pages */}
-            <Outlet />
+            <main>
+                <Outlet />
+            </main>
         </>
     )
 }

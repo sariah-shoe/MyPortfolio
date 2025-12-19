@@ -4,6 +4,9 @@ export default function AdminHome() {
     return (
         // Simple navigation to each of the admin pages
         <div className="flex flex-col items-center">
+            <h1 className="text-2xl font-semibold text-gray-900 mb-6">
+                Admin Dashboard
+            </h1>
             <div className="flex flex-col items-center block rounded-md border border-gray-300 p-4 shadow-sm sm:p-6">
                 <Link to={"/admin/about"} className="mb-4 text-3xl font-bold leading-none tracking-tight text-gray-900 md:text-4xl">About Me</Link>
                 <hr className="w-48 h-1 mx-auto my-4 bg-gray-100 border-0 rounded-sm md:my-10 dark:bg-gray-700" />

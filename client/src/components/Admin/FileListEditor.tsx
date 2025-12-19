@@ -28,7 +28,7 @@ export default function FileListEditor({
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const initialFilesKey = JSON.stringify(initialFiles);
+  const initialFilesKey = initialFiles.map(f => f._id).join(",");
 
   // Local dirty flag; only flips true on edit, resets when initialItems change
   const [isDirty, setIsDirty] = useState(false);
@@ -172,7 +172,7 @@ export default function FileListEditor({
               <div className="flex justify-center items-center bg-gray-50 rounded overflow-hidden max-h-[300px]">
                 <img
                   src={file.url}
-                  alt={`Existing ${index}`}
+                  alt=""
                   className="h-auto max-h-[300px] w-auto max-w-full object-contain"
                 />
               </div>
@@ -218,7 +218,7 @@ export default function FileListEditor({
               <div className="flex justify-center items-center bg-gray-50 rounded overflow-hidden max-h-[250px]">
                 <img
                   src={url}
-                  alt={`New ${i + 1}`}
+                  alt=""
                   className="h-auto max-h-[250px] w-auto max-w-full object-contain"
                 />
               </div>

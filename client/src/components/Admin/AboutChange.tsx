@@ -143,7 +143,7 @@ export default function AboutChange() {
         <div>
             {/* My toast component that shows after a save */}
             {showToast && (
-                <div role="status" className="fixed top-4 right-4 z-50 rounded-md border border-gray-300 bg-white p-4 shadow-sm">
+                <div role="alert" aria-live="assertive" className="fixed top-4 right-4 z-50 rounded-md border border-gray-300 bg-white p-4 shadow-sm">
                     <div className="flex items-start gap-4">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -191,7 +191,7 @@ export default function AboutChange() {
             )}
 
             {/* Title and nav */}
-            <h2 className="mb-2 text-4xl font-bold text-gray-900">About Me</h2>
+            <h1 className="mb-2 text-4xl font-bold text-gray-900">About Me</h1>
             <Link to="/admin" className="inline-block mt-2 text-xl font-semibold text-blue-700 hover:underline">
                 Back to Admin
             </Link>
@@ -208,7 +208,7 @@ export default function AboutChange() {
                 }}
             >
                 {/* If there are unsaved changes to the form, display this warning at the top */}
-                {isDirty && <div role="status" className="border-s-4 border-yellow-700 bg-yellow-50 p-4">
+                {isDirty && <div role="alert" aria-live="polite" className="border-s-4 border-yellow-700 bg-yellow-50 p-4">
                     <div className="flex items-center gap-2 text-yellow-700">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
                             <path
@@ -270,7 +270,7 @@ export default function AboutChange() {
                             width="100%"
                             height="600px"
                             loading="lazy"
-                            title="PDF-file"
+                            title="Resume PDF preview"
                         />) :
                         <div className="p-3 border rounded text-sm text-gray-500">
                             No resume uploaded

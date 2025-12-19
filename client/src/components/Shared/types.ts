@@ -49,3 +49,8 @@ export type AuthContextType = {
 export type AdminOutletContext = {
   setHasUnsavedChanges: (value: boolean) => void;
 };
+
+export type Item = {
+  id: string;
+  value: string;
+}

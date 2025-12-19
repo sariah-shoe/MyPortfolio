@@ -99,7 +99,13 @@ export default function ProjectChange({
       <Form
         method="delete"
         action={`/admin/projects/${project._id}`}
-        onSubmit={() => onDangerousSubmit?.()}
+        onSubmit={(e) => {
+          if (!window.confirm("Delete this project?")) {
+            e.preventDefault();
+            return;
+          }
+          onDangerousSubmit?.();
+        }}
       >
         <button
           type="submit"
@@ -145,40 +151,75 @@ export default function ProjectChange({
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              className="p-2 border border-gray-300 rounded"
-              placeholder="Name"
-              defaultValue={project.name}
-              name="name"
-              required
-              maxLength={100}
-            />
-            <input
-              className="p-2 border border-gray-300 rounded"
-              placeholder="Start Date"
-              defaultValue={project.startDate?.slice(0, 10) ?? ""}
-              name="startDate"
-              type="date"
-              required
-            />
-            <input
-              className="p-2 border border-gray-300 rounded"
-              placeholder="End Date"
-              defaultValue={project.endDate?.slice(0, 10) ?? ""}
-              name="endDate"
-              type="date"
-            />
-            <input
-              className="p-2 border border-gray-300 rounded"
-              placeholder="GitHub Link"
-              defaultValue={project.gitLink}
-              name="gitLink"
-              maxLength={300}
-            />
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor={`name-${project._id}`}
+                className="text-sm font-medium text-gray-700"
+              >
+                Name
+              </label>
+              <input
+                id={`name-${project._id}`}
+                name="name"
+                defaultValue={project.name}
+                required
+                maxLength={100}
+                className="rounded border border-gray-300 p-2"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor={`startDate-${project._id}`}
+                className="text-sm font-medium text-gray-700"
+              >
+                Start Date
+              </label>
+              <input
+                id={`startDate-${project._id}`}
+                name="startDate"
+                type="date"
+                required
+                defaultValue={project.startDate?.slice(0, 10) ?? ""}
+                className="rounded border border-gray-300 p-2"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor={`endDate-${project._id}`}
+                className="text-sm font-medium text-gray-700"
+              >
+                End Date
+              </label>
+              <input
+                id={`endDate-${project._id}`}
+                name="endDate"
+                type="date"
+                defaultValue={project.endDate?.slice(0, 10) ?? ""}
+                className="rounded border border-gray-300 p-2"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor={`git-${project._id}`}
+                className="text-sm font-medium text-gray-700"
+              >
+                GitHub Link
+              </label>
+              <input
+                id={`git-${project._id}`}
+                name="gitLink"
+                type="text"
+                defaultValue={project.gitLink}
+                className="rounded border border-gray-300 p-2"
+              />
+            </div>
           </div>
 
           <div>
-            <label className="font-semibold">Highlights:</label>
+            <h3 className="text-sm font-medium text-gray-700">Highlights:</h3>
             <List
               name="highlights"
               initialItems={project.highlights}
@@ -187,7 +228,7 @@ export default function ProjectChange({
           </div>
 
           <div>
-            <label className="font-semibold">Skills:</label>
+            <h3 className="text-sm font-medium text-gray-700">Skills:</h3>
             <List
               name="skills"
               initialItems={project.skills}
@@ -196,16 +237,17 @@ export default function ProjectChange({
           </div>
 
           <div>
-            <label className="font-semibold">Images:</label>
-            <FileListEditor initialFiles={project.images} resetKey={resetKey} onDirty={(dirty) => childDirty(dirty)}/>
+            <h3 className="text-sm font-medium text-gray-700">Images:</h3>
+            <FileListEditor initialFiles={project.images} resetKey={resetKey} onDirty={(dirty) => childDirty(dirty)} />
           </div>
 
           <div>
-            <label className="font-semibold">Extra</label>
+            <label className="text-sm font-medium text-gray-700" htmlFor={`extra-${project._id}`}>Extra</label>
             <textarea
               className="w-full p-2 border border-gray-300 rounded"
               defaultValue={project.extra}
               name="extra"
+              id={`extra-${project._id}`}
               maxLength={2000}
             />
           </div>
