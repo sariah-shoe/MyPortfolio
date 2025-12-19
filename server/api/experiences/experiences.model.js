@@ -1,12 +1,11 @@
 import mongoose from "mongoose";
-import {FileObject} from "../fileObject/fileObject.model.js"
 let Schema = mongoose.Schema;
 
 let experienceSchema = Schema({
     typeEx: {
         type: String,
         required: [true, "typeEx is required"],
-        enum: { values: ["Professional", "Education", "Personal"], message: "Type of experience must be on of: Professional, education, personal" }
+        enum: { values: ["Professional", "Education", "Personal"], message: "Type of experience must be one of: Professional, education, personal" }
     },
     position: {
         type: String,
@@ -78,13 +77,6 @@ let experienceSchema = Schema({
         maxlength: [2000, 'Extra section must be 2000 characters or less'],
         default: ''
     }
-});
-
-// This makes use of pre middleware to delete the images and then delete the object
-experienceSchema.pre('deleteOne', { document: true, query: false }, async function (next) {
-    const experience = this;
-    await FileObject.deleteMany({ _id: { $in: experience.images } });
-    next();
 });
 
 let Experience = mongoose.model('Experience', experienceSchema);

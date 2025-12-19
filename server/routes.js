@@ -8,7 +8,7 @@ import express from 'express'
 
 export default (app) => {
     // Public
-    app.use(express.static("public"));
+    app.use(express.static(path.resolve("public")));
 
     // API routers
     app.use('/api/auth', authRouter);
@@ -18,7 +18,7 @@ export default (app) => {
     app.use('/api/contact', contactRouter);
 
     // Catch-all
-    app.use("/{*splat}", (req, res) => {
+    app.use("*", (req, res) => {
         res.sendFile(path.resolve(`public/index.html`));
     });
 }

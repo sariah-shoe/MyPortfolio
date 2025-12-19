@@ -1,4 +1,4 @@
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 
 const UserSchema = new mongoose.Schema({
@@ -6,15 +6,17 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
-        index: true
+        index: true,
+        lowercase: true,
+        trim: true
     },
     passwordHash: {
         type: String,
         required: true
     },
-    role: { 
-        type: String, 
-        role: {enum: ["admin, viewer"]}, 
+    role: {
+        type: String,
+        enum: ["admin", "viewer"],
         default: "viewer"
     },
 }, { timestamps: true })

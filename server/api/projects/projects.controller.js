@@ -3,17 +3,9 @@
 
 import { Project } from './projects.model.js';
 import { FileObject } from '../fileObject/fileObject.model.js';
-import { uploadImageBuffer, deleteFromCloudinary } from '../../utils/cloudinaryFiles.js'; // adjust path if needed
+import { uploadImages, deleteFromCloudinary } from '../../utils/cloudinaryFiles.js';
+import { parseArray } from '../../utils/parseArray.js';
 import mongoose from 'mongoose';
-
-// small helper at top of controller file
-function parseArray(val) {
-  if (Array.isArray(val)) return val;
-  if (typeof val === 'string') {
-    try { const arr = JSON.parse(val); return Array.isArray(arr) ? arr : []; } catch { }
-  }
-  return [];
-}
 
 // GET /api/projects
 export async function index(req, res) {
@@ -43,7 +35,7 @@ export async function show(req, res) {
 // Accepts optional initial uploads via multipart field "newImages"
 export async function create(req, res) {
   try {
-    // Accept existing image ObjectIds from the body (optional)
+    // Accept existing image ObjectIds from the body
     const existingIds = Array.isArray(req.body.images)
       ? req.body.images
       : (req.body.images ? [req.body.images] : []);
@@ -54,24 +46,17 @@ export async function create(req, res) {
         return res.status(400).json({ error: 'One or more image IDs are invalid' });
       }
     }
+    // Check the count for my images
+    const newCount = Array.isArray(req.files) ? req.files.length : 0;
 
-    // Upload any new images
-    const uploadedIds = [];
-    if (Array.isArray(req.files) && req.files.length) {
-      for (const file of req.files) {
-        const result = await uploadImageBuffer(file.buffer, { folder: 'portfolio/projects' });
-        const created = await FileObject.create({
-          type: 'image',
-          url: result.secure_url,
-          public_id: result.public_id,
-        });
-        uploadedIds.push(created._id);
-      }
+    // If too many ids have been uploaded, throw error
+    if (existingIds.length + newCount > 10) {
+      return res.status(400).json({ error: 'You can attach up to 10 images only' });
     }
 
-    // Enforce max 10 total images
-    if (existingIds.length + uploadedIds.length > 10) {
-      return res.status(400).json({ error: 'You can attach up to 10 images only' });
+    let uploadedIds = [];
+    if (newCount) {
+      uploadedIds = await uploadImages(req.files, 'portfolio/projects');
     }
 
     // Create project with merged images
@@ -98,7 +83,7 @@ export async function update(req, res) {
     const project = await Project.findById(id);
     if (!project) return res.status(404).json({ message: 'Not found' });
 
-    // 1) Handle deletions (Cloudinary + DB + array)
+    // Handle deletions (Cloudinary + DB + array)
     const rawDelete = req.body.deleteFileIds;
     const deleteFileIds = Array.isArray(rawDelete)
       ? rawDelete
@@ -125,35 +110,28 @@ export async function update(req, res) {
       // Remove the FileObject docs
       await FileObject.deleteMany({ _id: { $in: oids } });
 
-      // pull ALL references from the project atomically
-      // (works whether images are stored as ObjectIds or strings)
+      // pull all references from the project
       await Project.updateOne(
         { _id: req.params.id },
         { $pull: { images: { $in: [...oids, ...deleteFileIds] } } }
       );
     }
 
-    // 2) Upload new images
-    const uploadedIds = [];
-    if (Array.isArray(req.files) && req.files.length) {
-      for (const file of req.files) {
-        const result = await uploadImageBuffer(file.buffer, { folder: 'portfolio/projects' });
-        const created = await FileObject.create({
-          type: 'image',
-          url: result.secure_url,
-          public_id: result.public_id,
-        });
-        uploadedIds.push(created._id);
-      }
-    }
+    // Check the count for my images
+    const newCount = Array.isArray(req.files) ? req.files.length : 0;
 
-    // 3) Enforce max 10 total images
-    if (project.images.length + uploadedIds.length > 10) {
+    // If too many ids have been uploaded, throw error
+    if (project.images.length + newCount > 10) {
       return res.status(400).json({ error: 'You can attach up to 10 images only' });
     }
-    project.images.push(...uploadedIds);
 
-    // 4) Patch other fields if provided
+    let uploadedIds = [];
+    if (newCount) {
+      uploadedIds = await uploadImages(req.files, 'portfolio/projects');
+      project.images.push(...uploadedIds);
+    }
+
+    // Patch other fields if provided
     if (req.body.name !== undefined) project.name = req.body.name;
     if (req.body.startDate !== undefined) project.startDate = req.body.startDate;
     if (req.body.endDate !== undefined) project.endDate = req.body.endDate;
@@ -182,13 +160,22 @@ export async function destroy(req, res) {
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ message: 'Not found' });
 
+    // Get the files attached to my project
     const files = await FileObject.find({ _id: { $in: project.images } });
-    await Promise.all(files.map(f => deleteFromCloudinary(f.public_id, 'image').catch(() => null)));
 
+    // delete remote assets first (best-effort)
+    await Promise.all(
+      files.map(f => deleteFromCloudinary(f.public_id, 'image').catch(() => null))
+    );
+
+    // delete FileObjects
     await FileObject.deleteMany({ _id: { $in: project.images } });
+
+    // delete project last
     await project.deleteOne();
 
     res.status(204).send();
+
   } catch (err) {
     if (err.name === 'ValidationError' || err.name === 'CastError') {
       return res.status(400).json({ error: err.message });
