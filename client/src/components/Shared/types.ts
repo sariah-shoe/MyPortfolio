@@ -43,6 +43,7 @@ export interface ProjectObject {
 export type AuthContextType = {
   auth: boolean;
   setAuth: React.Dispatch<React.SetStateAction<boolean>>;
+  loading: boolean;
 };
 
 export type AdminOutletContext = {

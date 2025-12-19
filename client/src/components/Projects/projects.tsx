@@ -1,7 +1,7 @@
 import Filter from '../Shared/Filter';
 import SearchBar from '../Shared/SearchBar';
 import type { ProjectObject } from '../Shared/types';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useLoaderData } from 'react-router-dom';
 import { formatExperienceRange } from '../Shared/dateUtils';
 import { getSortDate } from '../Shared/dateSorter';
@@ -11,15 +11,15 @@ export default function Projects() {
     const { allProjects } = useLoaderData() as { allProjects: ProjectObject[] }
 
     // This creates my array of skills for filters by looping through my projects and grabbing unique skills
-    let skills: string[] = []
-
-    for (const project of allProjects) {
-        for (const skill of project.skills) {
-            if (!skills.includes(skill)) {
-                skills.push(skill);
-            }
+    // Memoized because we only want it to change when allProjects does
+    const skills = useMemo(() => {
+        const unique = new Set<string>();
+        for (const project of allProjects) {
+            project.skills.forEach((skill) => unique.add(skill));
         }
-    }
+        return Array.from(unique).sort();
+    }, [allProjects]);
+
 
     // State for filter
     const [filter, setFilter] = useState<string[]>([]);
@@ -40,9 +40,9 @@ export default function Projects() {
                         <div>
                             <div className="flex gap-4 justify-between">
                                 <div className="flex gap-4">
-                                    <h2 className="text-2xl font-semibold text-gray-900 sm:text-3xl mb-5">
+                                    <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl mb-5">
                                         My Projects
-                                    </h2>
+                                    </h1>
                                 </div>
 
                                 {/* Search bar for experiences */}
@@ -109,9 +109,9 @@ export default function Projects() {
                                         // Otherwise, check if there is a match in any of the experience fields
                                         project.name.toLowerCase().includes(search.toLowerCase()) ||
                                         project.startDate.toLowerCase().includes(search.toLowerCase()) ||
-                                        project.endDate.toLowerCase().includes(search.toLowerCase()) ||
-                                        project.highlights.some(h => h.toLowerCase().includes(search.toLowerCase())) ||
-                                        project.skills.some(s => s.toLowerCase().includes(search.toLowerCase()))
+                                        project.endDate?.toLowerCase().includes(search.toLowerCase()) ||
+                                        project.highlights?.some(h => h.toLowerCase().includes(search.toLowerCase())) ||
+                                        project.skills?.some(s => s.toLowerCase().includes(search.toLowerCase()))
 
                                     // Return if both matchesType matchesSkills and matchesSearch are true
                                     return matchesSkills && matchesSearch;
@@ -147,31 +147,25 @@ export default function Projects() {
 
                                         </span>
 
-                                        <a href="#">
-                                            <h3 className="mt-0.5 text-lg font-medium text-gray-900">
-                                                {project.name}
-                                            </h3>
-                                        </a>
+                                        <h2 className="mt-0.5 text-lg font-medium text-gray-900">
+                                            {project.name}
+                                        </h2>
 
                                         <div>
-                                            <h2>
+                                            <p>
                                                 {formatExperienceRange(project.startDate, project.endDate)}
-                                            </h2>
+                                            </p>
                                         </div>
 
                                         <p className="mt-2 line-clamp-3 text-sm/relaxed text-gray-500">
-                                            <ul>
-                                                {project.highlights.map((highlight: string, idx: number) => (
-                                                    <li key={idx}>{highlight}</li>
-                                                ))}
-                                            </ul>
+                                            {project?.extra}
                                         </p>
 
                                         <div className="mt-4 flex flex-wrap gap-1">
-                                            {project.skills.length > 0 ? project.skills.map((skill: string, idx: number) =>
+                                            {project.skills.length > 0 ? project.skills.map((skill: string) =>
                                             (<span
                                                 className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs whitespace-nowrap text-gray-600 dark:bg-gray-700 dark:text-gray-100"
-                                                key={idx}
+                                                key={skill}
                                             >
                                                 {skill}
                                             </span>)) : <span></span>}

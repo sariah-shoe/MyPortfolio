@@ -62,7 +62,7 @@ export default function Footer() {
                     </div>
 
                     {/* Footer Navigation */}
-                    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-6">
+                    <nav aria-label="Footer" className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-6">
                         <div>
                             <p className="font-medium text-gray-900"><Link to={"/"}>Homepage</Link></p>
 
@@ -88,7 +88,7 @@ export default function Footer() {
                         <div>
                             <p className="font-medium text-gray-900"><Link to={"/admin"}>Admin Pages</Link></p>
                         </div>
-                    </div>
+                    </nav>
                 </div>
 
                 <p className="text-xs text-gray-500">

@@ -1,12 +1,25 @@
 // Used the icon on the left, links in the middle and call to actions on the right template from https://www.hyperui.dev/components/marketing/headers
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import NavDropdown from './navDropdown';
 
 export default function Header() {
     // State management of the hamburger menu opening and closing
     const [hamburger, setHamburger] = useState(false);
+
+    // Ref for the first mobile link
+    const firstMobileLinkRef = useRef<HTMLAnchorElement | null>(null);
+
+    // When the hamburger opens, focus on the first mobile link
+    useEffect(() => {
+        if (hamburger) {
+            firstMobileLinkRef.current?.focus();
+        }
+    }, [hamburger]);
+
+    // Helper function to close mobile menu
+    const closeMenu = () => setHamburger(false);
 
     return (
         <header className="bg-white">
@@ -50,6 +63,9 @@ export default function Header() {
                         <div className="block md:hidden">
                             <button
                                 className="rounded-sm bg-gray-100 p-2 text-gray-600 transition hover:text-gray-600/75"
+                                aria-label="Open navigation menu"
+                                aria-expanded={hamburger}
+                                aria-controls="mobile-menu"
                                 onClick={() => setHamburger(!hamburger)}
                             >
                                 <svg
@@ -69,13 +85,53 @@ export default function Header() {
 
                 {/* My hidden hamburger menu for mobile */}
                 {hamburger && (
-                    <nav className="md:hidden mt-2" aria-label="Mobile">
+                    <nav className="md:hidden mt-2" id="mobile-menu" aria-label="Mobile">
                         <ul className="space-y-2 text-sm">
-                            <li><Link className="block text-gray-700 px-4 py-2 hover:bg-gray-100" to="/">Home</Link></li>
-                            <li><Link className="block text-gray-700 px-4 py-2 hover:bg-gray-100" to="/experiences">Experiences</Link></li>
-                            <li><Link className="block text-gray-700 px-4 py-2 hover:bg-gray-100" to="/projects">Projects</Link></li>
-                            <li><Link className="block text-gray-700 px-4 py-2 hover:bg-gray-100" to="/resume">Resume</Link></li>
-                            <li><Link className="block text-gray-700 px-4 py-2 hover:bg-gray-100" to="/contact">Contact Me</Link></li>
+                            <li>
+                                <Link
+                                    className="block text-gray-700 px-4 py-2 hover:bg-gray-100"
+                                    to="/"
+                                    ref={firstMobileLinkRef}
+                                    onClick={closeMenu}
+                                >
+                                    Home
+                                </Link></li>
+                            <li>
+                                <Link
+                                    className="block text-gray-700 px-4 py-2 hover:bg-gray-100"
+                                    to="/experiences"
+                                    onClick={closeMenu}
+                                >
+                                    Experiences
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    className="block text-gray-700 px-4 py-2 hover:bg-gray-100"
+                                    to="/projects"
+                                    onClick={closeMenu}
+                                >
+                                    Projects
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    className="block text-gray-700 px-4 py-2 hover:bg-gray-100"
+                                    to="/resume"
+                                    onClick={closeMenu}
+                                >
+                                    Resume
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    className="block text-gray-700 px-4 py-2 hover:bg-gray-100"
+                                    to="/contact"
+                                    onClick={closeMenu}
+                                >
+                                    Contact Me
+                                </Link>
+                            </li>
                         </ul>
                     </nav>
                 )}

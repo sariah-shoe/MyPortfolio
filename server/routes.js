@@ -1,8 +1,8 @@
-import {router as experiencesRouter} from './api/experiences/index.js'
-import {router as projectsRouter} from './api/projects/index.js'
-import {router as aboutMeRouter} from './api/aboutMe/index.js'
-import {router as authRouter} from './api/auth/index.js'
-import {router as contactRouter} from './api/contact/index.js'
+import { router as experiencesRouter } from './api/experiences/index.js'
+import { router as projectsRouter } from './api/projects/index.js'
+import { router as aboutMeRouter } from './api/aboutMe/index.js'
+import { router as authRouter } from './api/auth/index.js'
+import { router as contactRouter } from './api/contact/index.js'
 import path from 'path'
 import express from 'express'
 
@@ -18,7 +18,8 @@ export default (app) => {
     app.use('/api/contact', contactRouter);
 
     // Catch-all
-    app.use("*", (req, res) => {
-        res.sendFile(path.resolve(`public/index.html`));
+    app.get("*splat", (req, res) => {
+        res.sendFile(path.resolve("public", "index.html"));
     });
+
 }

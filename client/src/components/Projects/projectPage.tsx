@@ -14,18 +14,25 @@ export default function ProjectPage() {
                         <div className="flex justify-center">
                             <div className="">
                                 <div className="max-w-lg md:max-w-none">
-                                    <h2 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
+                                    <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
                                         {project.name}
-                                    </h2>
+                                    </h1>
 
-                                    <h3 className="mt-1 text-base text-gray-700 sm:text-lg">
+                                    <p className="mt-1 text-base text-gray-700 sm:text-lg">
                                         {formatExperienceRange(project.startDate, project.endDate)}
-                                    </h3>
+                                    </p>
 
                                     <p className="mt-4 mb-2 text-sm text-gray-600 sm:text-base">
                                         {project.extra}
                                     </p>
-                                    <a href={project.gitLink} className="mt-2 text-sm text-gray-800 sm:text-base font-bold">Github Link</a>
+                                    <a
+                                        href={project.gitLink}
+                                        className="mt-2 text-sm text-gray-800 sm:text-base font-bold"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        View on GitHub
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -35,17 +42,24 @@ export default function ProjectPage() {
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:items-center md:gap-8">
                             <div className="md:col-span-1">
                                 <div className="max-w-lg md:max-w-none">
-                                    <h2 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
+                                    <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
                                         {project.name}
-                                    </h2>
+                                    </h1>
 
-                                    <h3 className="mt-1 text-base text-gray-700 sm:text-lg">{formatExperienceRange(project.startDate, project.endDate)}</h3>
+                                    <p className="mt-1 text-base text-gray-700 sm:text-lg">{formatExperienceRange(project.startDate, project.endDate)}</p>
 
                                     <p className="mt-4 mb-2 text-sm text-gray-600 sm:text-base">
                                         {project.extra}
                                     </p>
 
-                                    <a href={project.gitLink} className="mt-2 text-sm text-gray-800 sm:text-base font-bold">Github Link</a>
+                                    <a
+                                        href={project.gitLink}
+                                        className="mt-2 text-sm text-gray-800 sm:text-base font-bold"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        View on GitHub
+                                    </a>
                                 </div>
                             </div>
 
@@ -62,34 +76,34 @@ export default function ProjectPage() {
             </section>
             {/* This section holds two cards that show my highlights and skills */}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-8 mx-4 my-10 sm:mx-8 lg:mx-16">
-                <div>
+                <section aria-labelledby="project-highlights">
                     <div className="block rounded-md border border-gray-300 p-4 shadow-sm sm:p-6">
                         <div className="sm:flex sm:justify-between sm:gap-4 lg:gap-6">
                             <div className="mt-4 sm:mt-0">
-                                <h3 className="text-lg font-medium text-pretty text-gray-900">
+                                <h2 id="project-highlights" className="text-lg font-medium text-pretty text-gray-900">
                                     Highlights of my project
-                                </h3>
+                                </h2>
                                 <ul className="mt-4 list-disc list-inside text-sm text-gray-700 space-y-1">
                                     {project.highlights.map((highlight) => <li>{highlight}</li>)}
                                 </ul>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div className="h-32">
+                </section>
+                <section aria-labelledby="project-skills" className="h-32">
                     <div className="block rounded-md border border-gray-300 p-4 shadow-sm sm:p-6">
                         <div className="sm:flex sm:justify-between sm:gap-4 lg:gap-6">
                             <div className="mt-4 sm:mt-0">
-                                <h3 className="text-lg font-medium text-pretty text-gray-900">
+                                <h2 id="project-skills" className="text-lg font-medium text-pretty text-gray-900">
                                     Skills Learned and Used
-                                </h3>
+                                </h2>
                                 <ul className="mt-4 list-disc list-inside text-sm text-gray-700 space-y-1">
                                     {project.skills.map((skill) => <li>{skill}</li>)}
                                 </ul>
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
             </div>
         </div>
     );

@@ -42,7 +42,7 @@ export default function CustomCarousel({ images }: CustomCarouselProps) {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isPaused, images.length]);
+  }, [isPaused, images]);
 
   const containerClasses =
     "relative w-full mx-auto mt-10 overflow-hidden rounded shadow-lg transition-all duration-300 " +
@@ -58,21 +58,21 @@ export default function CustomCarousel({ images }: CustomCarouselProps) {
       <div className="w-full h-full flex items-center justify-center bg-black">
         <img
           src={images[currentIndex]}
-          alt={`Slide ${currentIndex}`}
+          alt=""
           className={imageClasses}
         />
       </div>
 
       {/* Left/Right Buttons */}
       <button
-        className="absolute top-1/2 left-4 -translate-y-1/2 transform text-white bg-gray-700 bg-opacity-70 hover:bg-opacity-100 p-2 rounded-full"
+        className="absolute top-1/2 left-4 -translate-y-1/2 transform text-white bg-gray-700 bg-opacity-70 hover:bg-opacity-100 p-2 rounded-full focus-visible:ring focus-visible:ring-white"
         onClick={prevSlide}
         aria-label="Previous image"
       >
         ❮
       </button>
       <button
-        className="absolute top-1/2 right-4 -translate-y-1/2 transform text-white bg-gray-700 bg-opacity-70 hover:bg-opacity-100 p-2 rounded-full"
+        className="absolute top-1/2 right-4 -translate-y-1/2 transform text-white bg-gray-700 bg-opacity-70 hover:bg-opacity-100 p-2 rounded-full focus-visible:ring focus-visible:ring-white"
         onClick={nextSlide}
         aria-label="Next image"
       >
@@ -83,7 +83,7 @@ export default function CustomCarousel({ images }: CustomCarouselProps) {
       <button
         type="button"
         onClick={toggleExpanded}
-        className="absolute top-4 right-4 flex items-center justify-center rounded-full bg-gray-700 bg-opacity-70 p-2 text-white hover:bg-opacity-100"
+        className="absolute top-4 right-4 flex items-center justify-center rounded-full bg-gray-700 bg-opacity-70 p-2 text-white hover:bg-opacity-100 focus-visible:ring focus-visible:ring-white"
         aria-label={isExpanded ? "Minimize carousel" : "Expand carousel"}
       >
         {isExpanded ? (
@@ -135,7 +135,7 @@ export default function CustomCarousel({ images }: CustomCarouselProps) {
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition ${
+              className={`w-3 h-3 rounded-full transition focus-visible:ring focus-visible:ring-white ${
                 index === currentIndex ? "bg-white" : "bg-white/50"
               }`}
               aria-label={`Go to slide ${index + 1}`}
@@ -145,7 +145,7 @@ export default function CustomCarousel({ images }: CustomCarouselProps) {
 
         {/* Pause/Resume */}
         <button
-          className="flex items-center justify-center text-white bg-gray-700 bg-opacity-70 hover:bg-opacity-100 px-2 py-1 text-sm rounded"
+          className="flex items-center justify-center text-white bg-gray-700 bg-opacity-70 hover:bg-opacity-100 px-2 py-1 text-sm rounded focus-visible:ring focus-visible:ring-white"
           onClick={togglePause}
           aria-label={isPaused ? "Play slideshow" : "Pause slideshow"}
         >

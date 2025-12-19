@@ -1,18 +1,25 @@
 // src/components/Errors/AdminErrorPage.tsx
 import { isRouteErrorResponse, Link, useRouteError } from "react-router-dom";
+import { useEffect } from "react";
 import { useAuth } from "../Shared/AuthContext";
 
 export default function AdminErrorPage() {
   const error = useRouteError();
   const { setAuth } = useAuth();
 
-  if (isRouteErrorResponse(error)) {
-    if(error.status == 401){
+  useEffect(() => {
+    if (
+      isRouteErrorResponse(error) &&
+      error.status === 401
+    ) {
       setAuth(false);
     }
+  }, [error, setAuth]);
+
+  if (isRouteErrorResponse(error)) {
     return (
       <main className="mx-auto max-w-2xl p-8">
-        <h1 className="text-2xl font-bold">Request failed</h1>
+        <h1 className="text-2xl font-bold" aria-live="assertive">Request failed</h1>
         <p className="mt-2">
           <strong>{error.status}</strong> {error.statusText}
         </p>
@@ -45,7 +52,7 @@ export default function AdminErrorPage() {
     <main className="mx-auto max-w-2xl p-8">
       <h1 className="text-2xl font-bold">Unexpected error</h1>
       <p className="mt-2">Check the console for details.</p>
-      <Link to={"/admin" } className="mt-6 inline-block underline">Return to Admin Home</Link>
+      <Link to={"/admin"} className="mt-6 inline-block underline">Return to Admin Home</Link>
     </main>
   );
 }

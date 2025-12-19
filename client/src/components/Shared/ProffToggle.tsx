@@ -1,19 +1,20 @@
-// I use the functionality of a toggle between professional and personal in both experiences and projects so I moved it here to make reuse simpler
-
-interface ProffToggleProps{
-    value: boolean,
-    onChange: (newValue: boolean) => void
+interface ProffToggleProps {
+  id: string;
+  value: boolean,
+  onChange: (newValue: boolean) => void
 }
 
-export default function ProffToggle({ value, onChange } : ProffToggleProps) {
+export default function ProffToggle({ id, value, onChange }: ProffToggleProps) {
   return (
     <label
-      htmlFor="ProffToggle"
+      htmlFor={id}
       className="relative block h-8 w-12 [-webkit-tap-highlight-color:_transparent]"
     >
+      <span className="sr-only">Personal mode</span>
+      
       <input
         type="checkbox"
-        id="ProffToggle"
+        id={id}
         className="peer sr-only"
         checked={value}
         onChange={() => onChange(!value)}

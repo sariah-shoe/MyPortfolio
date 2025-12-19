@@ -104,15 +104,15 @@ export default function Filter({ skills, filter, setFilter }: FilterProps) {
             <div className="flex flex-col items-start gap-3 max-h-48 overflow-y-auto pr-2">
               {visibleSkills.map((skill) => (
                 <label
-                  key={skill}
-                  htmlFor={skill}
+                  key={`skill-${skill.replace(/\s+/g, "-").toLowerCase()}`}
+                  htmlFor={`skill-${skill.replace(/\s+/g, "-").toLowerCase()}`}
                   className="inline-flex items-center gap-3"
                 >
                   <input
                     type="checkbox"
                     className="size-5 rounded border-gray-300 shadow-sm"
-                    id={skill}
-                    onChange={() => toggleSkill(skill)}
+                    id={`skill-${skill.replace(/\s+/g, "-").toLowerCase()}`}
+                    onChange={(e) => toggleSkill(skill)}
                     checked={filter.includes(skill)}
                   />
 

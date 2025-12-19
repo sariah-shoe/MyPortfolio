@@ -1,11 +1,12 @@
 import { Form, useNavigation, useActionData } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 type ActionResult = {
   success: boolean;
 };
 
 export default function Contact() {
+  // Vars to help with toast
   const navigation = useNavigation();
   const actionData = useActionData() as ActionResult | undefined;
 
@@ -13,6 +14,16 @@ export default function Contact() {
 
   const [showToast, setShowToast] = useState(false);
   const [success, setSuccess] = useState<boolean | null>(null);
+
+  const toastRef = useRef<HTMLDivElement | null>(null);
+
+  // Focus on the toast when it pops up
+  useEffect(() => {
+    if (showToast) {
+      toastRef.current?.focus();
+    }
+  }, [showToast]);
+
 
   // Show toast when action resolves
   useEffect(() => {
@@ -28,16 +39,18 @@ export default function Contact() {
   return (
     <div className="flex flex-col">
       <div className="flex justify-center mt-4">
-        <h2 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
+        <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
           Contact Me
-        </h2>
+        </h1>
       </div>
 
       {/* Toast */}
       {showToast && success !== null && (
         <div
-          role="status"
-          aria-live="polite"
+          ref={toastRef}
+          tabIndex={-1}
+          role="alert"
+          aria-live="assertive"
           className="fixed top-4 right-4 z-50 rounded-md border border-gray-300 bg-white p-4 shadow-sm"
         >
           <div className="flex items-start gap-4">
@@ -47,9 +60,8 @@ export default function Contact() {
               fill="none"
               stroke="currentColor"
               strokeWidth="1.5"
-              className={`size-6 ${
-                success ? "text-green-600" : "text-red-600"
-              }`}
+              className={`size-6 ${success ? "text-green-600" : "text-red-600"
+                }`}
             >
               <path
                 strokeLinecap="round"
@@ -90,30 +102,33 @@ export default function Contact() {
           className="space-y-6 max-w-xl mx-auto"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="flex flex-col">
+            <label className="flex flex-col" htmlFor="firstName">
               First Name
               <input
                 type="text"
                 name="firstName"
+                id="firstName"
                 className="p-2 text-sm border rounded-md bg-gray-100"
               />
             </label>
 
-            <label className="flex flex-col">
+            <label className="flex flex-col" htmlFor="lastName">
               Last Name
               <input
                 type="text"
                 name="lastName"
+                id="lastName"
                 className="p-2 text-sm border rounded-md bg-gray-100"
               />
             </label>
           </div>
 
-          <label className="flex flex-col">
+          <label className="flex flex-col" htmlFor="email">
             Email Address
             <input
               type="email"
               name="email"
+              id="email"
               required
               className="p-2 text-sm border rounded-md bg-gray-100"
             />
@@ -131,13 +146,14 @@ export default function Contact() {
             />
           </div>
 
-          <label className="flex flex-col">
+          <label className="flex flex-col" htmlFor="message">
             Message
             <textarea
               name="message"
+              id="message"
               rows={4}
               required
-              className="p-2 text-sm border rounded-md bg-gray-100"
+              className="p-2 text-sm border rounded-md bg-gray-100 resize-y"
             />
           </label>
 
@@ -145,10 +161,9 @@ export default function Contact() {
             type="submit"
             disabled={isSubmitting}
             className={`w-full rounded-md border px-4 py-2 text-sm font-medium transition
-              ${
-                isSubmitting
-                  ? "bg-indigo-300 border-indigo-300 cursor-not-allowed"
-                  : "bg-indigo-600 border-indigo-600 text-white hover:bg-transparent hover:text-indigo-600"
+              ${isSubmitting
+                ? "bg-indigo-300 border-indigo-300 cursor-not-allowed"
+                : "bg-indigo-600 border-indigo-600 text-white hover:bg-transparent hover:text-indigo-600"
               }`}
           >
             {isSubmitting ? "Sending…" : "Submit"}

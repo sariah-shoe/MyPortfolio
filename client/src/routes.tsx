@@ -23,7 +23,6 @@ const router = createBrowserRouter([
     {
         path: "/",
         element: <Root />,
-        loader: aboutMeActions.load_all,
         errorElement: <PublicErrorPage />,
         children: [
             { index: true, element: <AboutMe />, loader: aboutMeActions.load_all },
@@ -33,8 +32,6 @@ const router = createBrowserRouter([
             { path: "projects", element: <Projects />, loader: projectActions.load_all },
             { path: "projects/:id", element: <ProjectPage />, loader: projectActions.load_one },
             { path: "resume", element: <Resume />, loader: aboutMeActions.load_all },
-            // Public 404 for any unknown public route
-            { path: "*", element: <PublicErrorPage /> },
         ]
     },
     {
@@ -58,10 +55,7 @@ const router = createBrowserRouter([
             },
             { path: "*", element: <AdminErrorPage />}
         ]
-    },
-
-    // Absolute catch-all
-    { path: "*", element: <PublicErrorPage />}
+    }
 ]);
 
 export default router;
