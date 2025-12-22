@@ -3,10 +3,8 @@ import { redirect } from "react-router-dom";
 import type { ProjectObject } from "../components/Shared/types";
 import { makeJson, fetchJson, fetchForm } from "./http";
 
-const apiUrl = import.meta.env.VITE_API_URL;
-
 async function load_all() {
-    const data = await fetchJson(`${apiUrl}api/projects`);
+    const data = await fetchJson(`/api/projects`);
     if (!data) {
         throw makeJson({ message: "Experiences not found" }, { status: 404, statusText: "Not found" });
     }
@@ -20,7 +18,7 @@ async function load_all() {
 }
 
 async function load_one({ params }: LoaderFunctionArgs) {
-    const data = await fetchJson(`${apiUrl}api/projects/${params.id}`);
+    const data = await fetchJson(`/api/projects/${params.id}`);
     if (!data) {
         throw makeJson({ message: `Experience ${params.id} not found` }, { status: 404, statusText: "Not found" });
     }
@@ -30,7 +28,7 @@ async function load_one({ params }: LoaderFunctionArgs) {
 async function create() {
     const today = new Date().toISOString().slice(0, 10);
 
-    await fetchJson(`${apiUrl}api/projects`, {
+    await fetchJson(`/api/projects`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -93,7 +91,7 @@ async function modify({ request, params }: ActionFunctionArgs) {
         }
 
         return fetchForm(
-            `${apiUrl}api/projects/${params.id}`,
+            `/api/projects/${params.id}`,
             fd,
             {method: "PUT"}
         )
@@ -101,7 +99,7 @@ async function modify({ request, params }: ActionFunctionArgs) {
     }
 
     if (method === "DELETE") {
-        await fetchJson(`${apiUrl}api/projects/${id}`, {method: "DELETE", credentials: "include"});
+        await fetchJson(`/api/projects/${id}`, {method: "DELETE", credentials: "include"});
     }
 
     return redirect(`/admin/projects`);

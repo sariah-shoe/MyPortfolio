@@ -1,4 +1,4 @@
-import { Dialog } from "@headlessui/react";
+import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login, logout } from "../../apiHandling/authActions";
@@ -55,14 +55,14 @@ export default function LogIn() {
       {auth ? (
         <button
           onClick={handleLogout}
-          className="rounded bg-gray-800 px-3 py-1 text-sm text-white"
+          className="rounded bg-red-600 px-3 py-1 text-sm text-white"
         >
           Log out
         </button>
       ) : (
         <button
           onClick={() => setOpen(true)}
-          className="rounded bg-gray-800 px-3 py-1 text-sm text-white"
+          className="rounded bg-green-600 px-3 py-1 text-sm text-white"
         >
           Admin Login
         </button>
@@ -82,10 +82,10 @@ export default function LogIn() {
 
         {/* Centered panel */}
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="w-full max-w-sm rounded bg-white p-6 shadow-lg">
-            <Dialog.Title className="text-lg font-semibold">
+          <DialogPanel className="w-full max-w-sm rounded bg-white p-6 shadow-lg">
+            <DialogTitle className="text-lg font-semibold">
               Admin Login
-            </Dialog.Title>
+            </DialogTitle>
 
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
               <div>
@@ -142,7 +142,7 @@ export default function LogIn() {
                 </button>
               </div>
             </form>
-          </Dialog.Panel>
+          </DialogPanel>
         </div>
       </Dialog>
     </>

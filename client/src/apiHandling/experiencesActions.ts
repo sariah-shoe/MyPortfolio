@@ -3,12 +3,10 @@ import { redirect } from "react-router-dom";
 import type { ExperienceObject } from "../components/Shared/types";
 import { makeJson, fetchJson, fetchForm } from "./http";
 
-const apiUrl = import.meta.env.VITE_API_URL;
-
 // Load all experiences
 async function load_all() {
     // Fetch data
-    const data = await fetchJson(`${apiUrl}api/experiences`);
+    const data = await fetchJson(`/api/experiences`);
 
     // Throw an error if nothing is returned
     if (!data) {
@@ -29,7 +27,7 @@ async function load_all() {
 // Load one experience
 async function load_one({ params }: LoaderFunctionArgs) {
     // Fetch data
-    const data = await fetchJson(`${apiUrl}api/experiences/${params.id}`)
+    const data = await fetchJson(`/api/experiences/${params.id}`)
 
     // Throw error if nothing is returned
     if (!data) {
@@ -46,7 +44,7 @@ async function create() {
     const today = new Date().toISOString().slice(0, 10);
 
     // Create an empty experience with the defaults in body
-    await fetchJson(`${apiUrl}api/experiences`, {
+    await fetchJson(`/api/experiences`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -119,7 +117,7 @@ async function modify({ request, params }: ActionFunctionArgs) {
 
         // Submit as multipart
         return fetchForm(
-            `${apiUrl}api/experiences/${params.id}`,
+            `$/api/experiences/${params.id}`,
             fd,
             { method: "PUT" }
         );
@@ -128,7 +126,7 @@ async function modify({ request, params }: ActionFunctionArgs) {
     // Delete an experience
     if (method === "DELETE") {
         // Use fetch to try and delete
-        await fetchJson(`${apiUrl}api/experiences/${id}`, { method: "DELETE", credentials: "include" });
+        await fetchJson(`/api/experiences/${id}`, { method: "DELETE", credentials: "include" });
     }
 
     // Redirect back to experiences

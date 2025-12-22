@@ -1,13 +1,10 @@
 import { redirect } from "react-router-dom";
 import { makeJson, fetchJson, fetchForm } from "./http";
 
-// Import the apiUrl from the .env
-const apiUrl = import.meta.env.VITE_API_URL;
-
 // Load all the data from about me
 async function load_all() {
     // Fetch JSON
-    const data = await fetchJson(`${apiUrl}api/aboutMe`)
+    const data = await fetchJson(`/api/aboutMe`)
 
     // AboutMe should always have data. If I get no data back, throw an error, otherwise return
     if (!data) {
@@ -46,7 +43,7 @@ async function update({ request }: { request: Request }) {
     }
 
     // Submit multipart form
-    await fetchForm(`${apiUrl}api/aboutMe`, fd, { method: "PUT" });
+    await fetchForm(`/api/aboutMe`, fd, { method: "PUT" });
 
     // Redirect back to admin/about
     return redirect("/admin/about");

@@ -23,7 +23,45 @@ export default (port, dbUrl) => {
     app.disable('x-powered-by');
 
     // Middleware config
-    app.use(helmet());
+    app.use(
+        helmet({
+            contentSecurityPolicy: {
+                directives: {
+                    defaultSrc: ["'self'"],
+
+                    imgSrc: [
+                        "'self'",
+                        "data:",
+                        "https://res.cloudinary.com",
+                    ],
+
+                    mediaSrc: [
+                        "'self'",
+                        "https://res.cloudinary.com",
+                    ],
+
+                    objectSrc: [
+                        "'self'",
+                        "https://res.cloudinary.com",
+                    ],
+
+                    frameSrc: [
+                        "'self'",
+                        "https://res.cloudinary.com",
+                    ],
+
+                    connectSrc: ["'self'"],
+
+                    scriptSrc: ["'self'"],
+
+                    styleSrc: ["'self'", "'unsafe-inline'"],
+
+                    fontSrc: ["'self'", "data:"],
+                },
+            },
+        })
+    );
+
     app.use(express.json());
     app.use(cookieParser())
     app.use(cors({

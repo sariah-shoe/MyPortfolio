@@ -4,8 +4,6 @@ type ContactActionResult = {
   success: boolean;
 };
 
-const apiUrl = import.meta.env.VITE_API_URL;
-
 export async function sendEmail({ request }: { request: Request }): Promise<ContactActionResult> {
   try {
     // Read form data from the router
@@ -16,7 +14,7 @@ export async function sendEmail({ request }: { request: Request }): Promise<Cont
     console.log(payload);
 
     // Send to backend
-    await fetchJson(`${apiUrl}api/contact`, {
+    await fetchJson(`/api/contact`, {
       method: "POST",
       body: JSON.stringify(payload),
       headers: { "Content-Type": "application/json" }
